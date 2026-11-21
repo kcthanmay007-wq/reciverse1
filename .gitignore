@@ -1,0 +1,10 @@
+node_modules/
+server/node_modules/
+*.log
+.system_generated/
+*.tmp
+extracted_template.txt
+brief_extracted.txt
+v5_extracted.txt
+brief_decoded.txt
+brief_clean.txt

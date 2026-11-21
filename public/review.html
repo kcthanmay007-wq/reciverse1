@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rate Your Repair Experience — Reciverse</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* ── Review page specific styles ───────────────────────────── */
+    .review-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      background: var(--bg);
+    }
+
+    .review-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r3);
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* header */
+    .review-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 2rem;
+    }
+    .review-brand .dot { color: var(--blue); }
+
+    .review-title {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+      line-height: 1.3;
+    }
+    .review-subtitle {
+      color: var(--light);
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+    .review-subtitle strong { color: var(--blue); }
+
+    /* divider */
+    .rv-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    /* ── Star rating ── */
+    .stars-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .stars-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .star-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: transform 0.12s ease;
+      outline: none;
+    }
+    .star-btn:focus-visible {
+      box-shadow: 0 0 0 2px var(--blue);
+    }
+    .star-btn svg {
+      width: 44px;
+      height: 44px;
+      display: block;
+      transition: fill 0.12s ease, filter 0.12s ease;
+    }
+    .star-btn svg .star-fill {
+      fill: var(--border);
+      transition: fill 0.12s ease;
+    }
+    .star-btn.lit svg .star-fill,
+    .star-btn.hovered svg .star-fill {
+      fill: var(--yellow);
+      filter: drop-shadow(0 0 6px rgba(251,191,36,0.5));
+    }
+    .star-btn:hover { transform: scale(1.12); }
+    .star-btn:active { transform: scale(0.96); }
+
+    .stars-hint {
+      font-size: 0.85rem;
+      color: var(--muted);
+      min-height: 1.4em;
+      transition: color 0.15s;
+    }
+    .stars-hint.active { color: var(--yellow); }
+
+    .validation-msg {
+      font-size: 0.82rem;
+      color: var(--red);
+      margin-top: 0.35rem;
+      display: none;
+    }
+    .validation-msg.show { display: block; }
+
+    /* ── Tags ── */
+    .tags-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .tags-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tag-chip {
+      background: var(--card2);
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--light);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      user-select: none;
+    }
+    .tag-chip:hover {
+      border-color: var(--blue);
+      color: var(--text);
+    }
+    .tag-chip.selected {
+      background: rgba(59,130,246,0.15);
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    /* ── Textarea ── */
+    .comment-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .comment-textarea {
+      width: 100%;
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      padding: 0.85rem 1rem;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      resize: vertical;
+      min-height: 110px;
+      transition: border-color 0.15s;
+      margin-bottom: 1.5rem;
+    }
+    .comment-textarea::placeholder { color: var(--muted); }
+    .comment-textarea:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    /* ── Submit button ── */
+    .submit-btn {
+      width: 100%;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      padding: 0.85rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s;
+      letter-spacing: .02em;
+    }
+    .submit-btn:hover { background: var(--blue-d); }
+    .submit-btn:active { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── States ── */
+    .state-box {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      display: none;
+    }
+    .state-box.show { display: block; }
+    .state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .state-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .state-sub {
+      color: var(--light);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    .redirect-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 1.5rem;
+    }
+    .redirect-progress {
+      height: 100%;
+      width: 0;
+      background: var(--green);
+      border-radius: 4px;
+      transition: width 2.8s linear;
+    }
+    .redirect-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="review-wrapper">
+    <div class="review-card">
+
+      <!-- Brand -->
+      <div class="review-brand">
+        🔧 Reci<span class="dot">verse</span>
+      </div>
+
+      <!-- Form state -->
+      <div id="formState">
+        <h1 class="review-title">Rate Your Repair Experience</h1>
+        <p class="review-subtitle" id="reviewSubtitle">
+          How did it go with <strong id="techNameDisplay">your technician</strong>?
+        </p>
+
+        <hr class="rv-divider" />
+
+        <!-- Star Rating -->
+        <div class="stars-label">Your Rating *</div>
+        <div class="stars-row" id="starsRow" role="group" aria-label="Star rating">
+          <!-- injected by JS -->
+        </div>
+        <div class="stars-hint" id="starsHint">Click a star to rate</div>
+        <div class="validation-msg" id="starValidation">Please select a star rating before submitting.</div>
+
+        <hr class="rv-divider" />
+
+        <!-- Tags -->
+        <div class="tags-label">Highlights <span style="color:var(--muted);font-weight:400;text-transform:none;font-size:.8rem;">(optional, pick any)</span></div>
+        <div class="tags-grid" id="tagsGrid">
+          <!-- tags fetched from API -->
+        </div>
+
+        <!-- Comment -->
+        <div class="comment-label">Your Review <span style="color:var(--muted);font-weight:400;text-transform:none;font-size:.8rem;">(optional)</span></div>
+        <textarea
+          class="comment-textarea"
+          id="commentInput"
+          placeholder="Share your experience..."
+          maxlength="1000"
+        ></textarea>
+
+        <!-- Submit -->
+        <button class="submit-btn" id="submitBtn">Submit Review</button>
+      </div>
+
+      <!-- Success state -->
+      <div class="state-box" id="successState">
+        <span class="state-icon">🎉</span>
+        <div class="state-title" style="color:var(--green);">Thank You!</div>
+        <div class="state-sub">Your review has been submitted. It helps others choose great technicians.</div>
+        <div class="redirect-bar">
+          <div class="redirect-progress" id="redirectProgress"></div>
+        </div>
+        <div class="redirect-hint">Redirecting to your dashboard…</div>
+      </div>
+
+      <!-- Already reviewed state -->
+      <div class="state-box" id="alreadyState">
+        <span class="state-icon">✅</span>
+        <div class="state-title">Already Reviewed</div>
+        <div class="state-sub">You've already submitted a review for this service. Thanks for your feedback!</div>
+        <button class="submit-btn" style="max-width:220px;margin:0 auto;display:block;"
+          onclick="window.location.href='user-dashboard.html'">Go to Dashboard</button>
+      </div>
+
+      <!-- Error state -->
+      <div class="state-box" id="errorState">
+        <span class="state-icon">⚠️</span>
+        <div class="state-title" style="color:var(--red);">Something went wrong</div>
+        <div class="state-sub" id="errorMsg">Could not submit your review. Please try again.</div>
+        <button class="submit-btn" onclick="document.getElementById('errorState').classList.remove('show');document.getElementById('formState').style.display='block';">
+          Try Again
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+  (() => {
+    /* ── Query params ── */
+    const params    = new URLSearchParams(window.location.search);
+    const requestId = params.get('requestId') || '';
+    const techId    = params.get('techId')    || '';
+    const techName  = decodeURIComponent(params.get('techName') || 'Your Technician');
+
+    document.getElementById('techNameDisplay').textContent = techName;
+
+    /* ── Auth token ── */
+    const token = Auth.userToken() || localStorage.getItem('reciverse_token');
+
+    /* ── Star rating state ── */
+    let selectedRating = 0;
+    let hoveredRating  = 0;
+    const hintTexts    = ['', 'Poor 😞', 'Fair 😐', 'Good 😊', 'Great 😄', 'Excellent 🤩'];
+    const starsRow     = document.getElementById('starsRow');
+    const starsHint    = document.getElementById('starsHint');
+    const starValidation = document.getElementById('starValidation');
+
+    // Build 5 star buttons
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'star-btn';
+      btn.setAttribute('type', 'button');
+      btn.setAttribute('aria-label', `${i} star`);
+      btn.dataset.val = i;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path class="star-fill" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>`;
+
+      btn.addEventListener('mouseenter', () => {
+        hoveredRating = i;
+        updateStars();
+      });
+      btn.addEventListener('mouseleave', () => {
+        hoveredRating = 0;
+        updateStars();
+      });
+      btn.addEventListener('click', () => {
+        selectedRating = i;
+        hoveredRating  = 0;
+        starValidation.classList.remove('show');
+        updateStars();
+      });
+
+      starsRow.appendChild(btn);
+    }
+
+    function updateStars() {
+      const active = hoveredRating || selectedRating;
+      const btns   = starsRow.querySelectorAll('.star-btn');
+      btns.forEach((b, idx) => {
+        b.classList.toggle('lit',     idx < selectedRating);
+        b.classList.toggle('hovered', hoveredRating > 0 && idx < hoveredRating);
+      });
+      if (active > 0) {
+        starsHint.textContent = hintTexts[active];
+        starsHint.classList.add('active');
+      } else {
+        starsHint.textContent = 'Click a star to rate';
+        starsHint.classList.remove('active');
+      }
+    }
+
+    /* ── Fetch tags ── */
+    const tagsGrid = document.getElementById('tagsGrid');
+    const selectedTags = new Set();
+
+    const defaultTags = ['Professional','On-time','Expert','Friendly','Clean work','Fair price','Would recommend'];
+
+    function renderTags(tags) {
+      tagsGrid.innerHTML = '';
+      tags.forEach(tag => {
+        const chip = document.createElement('button');
+        chip.className = 'tag-chip';
+        chip.type = 'button';
+        chip.textContent = tag;
+        chip.addEventListener('click', () => {
+          if (selectedTags.has(tag)) {
+            selectedTags.delete(tag);
+            chip.classList.remove('selected');
+          } else {
+            selectedTags.add(tag);
+            chip.classList.add('selected');
+          }
+        });
+        tagsGrid.appendChild(chip);
+      });
+    }
+
+    // Try fetching tags from API; fall back to defaults
+    (async () => {
+      try {
+        const data = await GET('/api/reviews/tags', token);
+        const tags = Array.isArray(data) ? data : (data.tags || defaultTags);
+        renderTags(tags);
+      } catch {
+        renderTags(defaultTags);
+      }
+    })();
+
+    /* ── Submit ── */
+    const submitBtn = document.getElementById('submitBtn');
+
+    submitBtn.addEventListener('click', async () => {
+      if (!selectedRating) {
+        starValidation.classList.add('show');
+        starsRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting…';
+
+      const body = {
+        requestId,
+        techId,
+        rating:  selectedRating,
+        comment: document.getElementById('commentInput').value.trim(),
+        tags:    [...selectedTags]
+      };
+
+      try {
+        const res = await POST('/api/reviews', body, token);
+
+        if (res.alreadyReviewed || res.message?.toLowerCase().includes('already')) {
+          showState('already');
+        } else if (res.success || res._id || res.review || res.message?.toLowerCase().includes('success')) {
+          showState('success');
+          setTimeout(() => {
+            document.getElementById('redirectProgress').style.width = '100%';
+          }, 50);
+          setTimeout(() => { window.location.href = 'user-dashboard.html'; }, 3200);
+        } else {
+          showError(res.message || res.error || 'Unexpected error. Please try again.');
+        }
+      } catch (err) {
+        showError('Network error. Please check your connection and try again.');
+      }
+    });
+
+    function showState(name) {
+      document.getElementById('formState').style.display = 'none';
+      if (name === 'success')  { document.getElementById('successState').classList.add('show'); }
+      if (name === 'already')  { document.getElementById('alreadyState').classList.add('show'); }
+      if (name === 'error')    { document.getElementById('errorState').classList.add('show'); }
+    }
+
+    function showError(msg) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Review';
+      document.getElementById('errorMsg').textContent = msg;
+      showState('error');
+    }
+  })();
+  </script>
+</body>
+</html>

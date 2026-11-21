@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Register as Technician — Reciverse</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="icon">🔧</span>Reci<span class="dot">verse</span></a>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <a href="/tech-login.html" class="btn btn-ghost btn-sm">Already registered? Login</a>
+  </div>
+</nav>
+
+<div class="auth-wrap" style="align-items:flex-start;padding-top:90px">
+  <div class="auth-box" style="max-width:640px">
+    <div class="auth-logo">🔧 Reci<span class="dot">verse</span> — Technician Registration</div>
+    <h1 class="auth-title">Join as a Technician</h1>
+    <p class="auth-sub">Register once — get repair jobs in your area. Verified, trusted, growing.</p>
+
+    <div class="alert" id="alertBox"></div>
+
+    <form id="techForm">
+
+      <!-- Basic Info -->
+      <div class="sh" style="font-size:.9rem;margin-bottom:1rem">📋 Personal Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="name" placeholder="Ravi Kumar" required/>
+        </div>
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" id="phone" placeholder="9876543210" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" id="email" placeholder="ravi@example.com" required/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>City *</label>
+          <input type="text" id="city" placeholder="Hyderabad" required/>
+        </div>
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" id="password" placeholder="Min 6 characters" required minlength="6"/>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Skills -->
+      <div class="sh" style="font-size:.9rem;margin-bottom:1rem">🛠️ Your Skills (select all you can repair)</div>
+      <div class="skills-grid" id="skillsGrid"></div>
+      <div id="skillError" style="color:var(--red);font-size:.8rem;margin-top:.4rem;display:none">Please select at least one skill.</div>
+
+      <div class="divider"></div>
+
+      <!-- Professional -->
+      <div class="sh" style="font-size:.9rem;margin-bottom:1rem">💼 Professional Background</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Years of Experience *</label>
+          <select id="experience" required>
+            <option value="">— Select —</option>
+            <option>Less than 1 year</option>
+            <option>1–2 years</option>
+            <option>3–5 years</option>
+            <option>6–10 years</option>
+            <option>10+ years</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Working Style</label>
+          <select id="workingStyle">
+            <option>Punctual & professional</option>
+            <option>Detail-oriented & patient</option>
+            <option>Fast & reliable</option>
+            <option>Thorough & communicative</option>
+            <option>Honest & transparent</option>
+            <option>Flexible</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Short Bio (optional)</label>
+        <textarea id="bio" placeholder="Tell customers a bit about your background, past companies you've worked with, specialisations…"></textarea>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Interview -->
+      <div class="interview-box">
+        <h3>🎓 Quick Knowledge Check</h3>
+        <p class="hint">Answer these 5 short questions to confirm your expertise. Your answers help customers trust you. There are no wrong answers — just be honest.</p>
+        <div class="iq">
+          <label>Q1. What is the first thing you do before starting any electrical repair?</label>
+          <textarea class="iq-answer" rows="2" placeholder="Your answer…"></textarea>
+        </div>
+        <div class="iq">
+          <label>Q2. How do you diagnose a faulty component without specialised equipment?</label>
+          <textarea class="iq-answer" rows="2" placeholder="Your answer…"></textarea>
+        </div>
+        <div class="iq">
+          <label>Q3. How do you explain the repair cost clearly to a customer before starting?</label>
+          <textarea class="iq-answer" rows="2" placeholder="Your answer…"></textarea>
+        </div>
+        <div class="iq">
+          <label>Q4. What do you do if you cannot fix the problem on the same visit?</label>
+          <textarea class="iq-answer" rows="2" placeholder="Your answer…"></textarea>
+        </div>
+        <div class="iq">
+          <label>Q5. How do you handle a customer who is unhappy with your service?</label>
+          <textarea class="iq-answer" rows="2" placeholder="Your answer…"></textarea>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <button type="submit" class="btn btn-orange btn-full btn-lg" id="submitBtn">
+          ✅ Complete Registration →
+        </button>
+      </div>
+    </form>
+
+    <div class="auth-foot">
+      Already registered? <a href="/tech-login.html" style="color:var(--orange)">Technician Login</a>
+      <br/>Looking for repairs instead? <a href="/user-signup.html">User Sign Up</a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script>
+  if (Auth.techToken()) window.location.href = '/tech-dashboard.html';
+
+  // Build skills grid
+  const grid = document.getElementById('skillsGrid');
+  PRODUCTS.forEach(p => {
+    const lbl = document.createElement('label');
+    lbl.className = 'skill-cb';
+    lbl.innerHTML = `<input type="checkbox" value="${p}"/> ${p}`;
+    lbl.querySelector('input').addEventListener('change', function() {
+      lbl.classList.toggle('checked', this.checked);
+    });
+    grid.appendChild(lbl);
+  });
+
+  document.getElementById('techForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn  = document.getElementById('submitBtn');
+    const alrt = document.getElementById('alertBox');
+    hideAlert(alrt);
+
+    // Collect skills
+    const skills = [...document.querySelectorAll('.skill-cb input:checked')].map(i=>i.value);
+    if (!skills.length) {
+      document.getElementById('skillError').style.display = 'block';
+      window.scrollTo({top: document.getElementById('skillsGrid').offsetTop - 100, behavior:'smooth'});
+      return;
+    }
+    document.getElementById('skillError').style.display = 'none';
+
+    // Collect interview answers
+    const answers = [...document.querySelectorAll('.iq-answer')].map(t=>t.value.trim());
+
+    btnLoading(btn, true);
+    const body = {
+      name:           document.getElementById('name').value.trim(),
+      phone:          document.getElementById('phone').value.trim(),
+      email:          document.getElementById('email').value.trim(),
+      city:           document.getElementById('city').value.trim(),
+      password:       document.getElementById('password').value,
+      experience:     document.getElementById('experience').value,
+      workingStyle:   document.getElementById('workingStyle').value,
+      bio:            document.getElementById('bio').value.trim(),
+      skills,
+      interviewAnswers: answers
+    };
+
+    try {
+      const res = await POST('/api/technicians/register', body);
+      if (res.error) { showAlert(alrt, res.error); btnLoading(btn, false); return; }
+      Auth.setTech(res.token, res.technician);
+      window.location.href = '/tech-dashboard.html';
+    } catch {
+      showAlert(alrt, 'Server error. Is the server running?');
+      btnLoading(btn, false);
+    }
+  });
+</script>
+</body>
+</html>

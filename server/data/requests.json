@@ -1,0 +1,405 @@
+[
+  {
+    "id": "ddb07020-8a7a-4c38-986f-ca57a99cefe6",
+    "userId": "0cac98c5-0a8d-480b-b72b-d819f8bfc350",
+    "productCategory": "Washing Machine",
+    "productName": "Samsung front-load",
+    "faultDescription": "Drum not spinning. Makes noise but doesn't rotate.",
+    "city": "Hyderabad",
+    "urgency": "urgent",
+    "status": "accepted",
+    "technicianId": "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+    "technicianName": "Ravi Kumar",
+    "technicianPhone": "9876543210",
+    "createdAt": "2026-10-08T19:14:53.575Z",
+    "acceptedAt": "2026-10-08T19:15:10.838Z",
+    "completedAt": null
+  },
+  {
+    "id": "2f55a051-c5c6-4b06-8369-e0caf16c0dc4",
+    "userId": "80c8ed48-d0ce-4bf3-b8b5-02cde66d6500",
+    "productCategory": "Washing Machine",
+    "productName": "samsung",
+    "faultDescription": "the drum is not working ,drum is not rotating",
+    "city": "Warangal",
+    "urgency": "urgent",
+    "status": "completed",
+    "technicianId": "420d4cbf-c3d5-4b82-acaf-5d4b5b7b665f",
+    "technicianName": "thanmay krishna kctk",
+    "technicianPhone": "09963916962",
+    "createdAt": "2026-10-08T19:17:18.278Z",
+    "acceptedAt": "2026-10-08T19:22:42.926Z",
+    "completedAt": "2026-10-09T09:10:37.403Z"
+  },
+  {
+    "id": "1b4529fc-3aba-474a-9859-7c88323a4b8e",
+    "userId": "80c8ed48-d0ce-4bf3-b8b5-02cde66d6500",
+    "productCategory": "Refrigerator",
+    "productName": "lg",
+    "faultDescription": "refrigirator having cooling issues",
+    "city": "warangal",
+    "urgency": "urgent",
+    "status": "completed",
+    "technicianId": "420d4cbf-c3d5-4b82-acaf-5d4b5b7b665f",
+    "technicianName": "thanmay krishna kctk",
+    "technicianPhone": "09963916962",
+    "createdAt": "2026-10-09T09:00:48.149Z",
+    "acceptedAt": "2026-10-09T09:10:31.855Z",
+    "completedAt": "2026-10-09T09:10:39.652Z",
+    "suggestedTechnicianId": "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+    "suggestedTechnicianName": "Ravi Kumar",
+    "suggestedTechScore": 90,
+    "passNumber": 2,
+    "passStatus": "pass2_notified",
+    "lastPassAt": "2026-10-09T09:06:07.778Z",
+    "notifiedTechIds": [
+      "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+      "420d4cbf-c3d5-4b82-acaf-5d4b5b7b665f"
+    ]
+  },
+  {
+    "id": "20d30f6e-95d8-486a-a8dc-97ae8c8732ff",
+    "userId": "80c8ed48-d0ce-4bf3-b8b5-02cde66d6500",
+    "productCategory": "Laptop/Computer",
+    "productName": "mother board issue and display problem",
+    "faultDescription": "display not working,battery issues",
+    "city": "warangal",
+    "urgency": "urgent",
+    "status": "accepted",
+    "technicianId": "624ae14f-1d5f-4abe-a89d-20f86ea8ccd0",
+    "technicianName": "Suresh Babu",
+    "technicianPhone": "9876543211",
+    "createdAt": "2026-10-09T09:14:53.433Z",
+    "acceptedAt": "2026-10-09T09:21:12.522Z",
+    "completedAt": null,
+    "suggestedTechnicianId": "90fb9a14-1076-4330-a9f1-6669de1fa4a5",
+    "suggestedTechnicianName": "Kiran Sharma",
+    "suggestedTechScore": 95,
+    "passNumber": 2,
+    "passStatus": "pass2_notified",
+    "lastPassAt": "2026-10-09T09:20:07.989Z",
+    "notifiedTechIds": [
+      "90fb9a14-1076-4330-a9f1-6669de1fa4a5",
+      "624ae14f-1d5f-4abe-a89d-20f86ea8ccd0"
+    ]
+  },
+  {
+    "id": "c53fc57a-21b7-42fe-a99c-2c439277b4e8",
+    "userId": "8a23cd55-2027-44e2-bdfc-6b0ec36df113",
+    "productCategory": "Washing Machine",
+    "productName": "Samsung WM",
+    "faultDescription": "Not spinning",
+    "city": "Hyderabad",
+    "urgency": "normal",
+    "status": "completed",
+    "technicianId": "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+    "technicianName": "Ravi Kumar",
+    "technicianPhone": "9876543210",
+    "createdAt": "2026-10-15T12:51:14.360Z",
+    "acceptedAt": "2026-10-15T12:51:14.547Z",
+    "completedAt": "2026-10-15T12:51:14.619Z",
+    "passLog": [
+      {
+        "pass": 1,
+        "at": "2026-10-15T12:51:14.369Z",
+        "result": "suggested",
+        "techId": "24e8c978-0f21-4b96-8b0d-0e1313c75f35",
+        "score": 103
+      }
+    ],
+    "suggestedTechnicianId": "24e8c978-0f21-4b96-8b0d-0e1313c75f35",
+    "suggestedTechnicianName": "Anitha Reddy",
+    "suggestedTechScore": 103,
+    "passNumber": 1,
+    "passStatus": "suggested",
+    "lastPassAt": "2026-10-15T12:51:14.369Z",
+    "notifiedTechIds": [
+      "24e8c978-0f21-4b96-8b0d-0e1313c75f35",
+      "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+      "420d4cbf-c3d5-4b82-acaf-5d4b5b7b665f"
+    ],
+    "technicianAvatar": "",
+    "hasReview": true
+  },
+  {
+    "id": "60aa4d96-fc65-4b1f-9750-42edeedb3284",
+    "userId": "d9beca06-6fa6-44ba-8e27-efd846eabd08",
+    "userName": "thanmay krishna kctk",
+    "userPhone": "09963916962",
+    "userEmail": "thanmay@123",
+    "productCategory": "Refrigerator",
+    "productName": "samsung",
+    "faultDescription": "cooling issues,voltage irregularities",
+    "city": "warangal",
+    "urgency": "normal",
+    "status": "accepted",
+    "technicianId": "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+    "technicianName": "Ravi Kumar",
+    "technicianPhone": "9876543210",
+    "technicianAvatar": "",
+    "passNumber": 4,
+    "passStatus": "pass4_auto_assigned",
+    "rejectedByTechIds": [],
+    "notifiedTechIds": [
+      "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+      "420d4cbf-c3d5-4b82-acaf-5d4b5b7b665f"
+    ],
+    "passLog": [
+      {
+        "pass": 1,
+        "at": "2026-10-15T14:00:40.423Z",
+        "result": "suggested",
+        "techId": "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+        "techName": "Ravi Kumar",
+        "score": 99
+      },
+      {
+        "pass": 2,
+        "at": "2026-10-15T14:03:12.716Z",
+        "result": "escalated",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 99
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:45:28.286Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:45:28.437Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:45:58.274Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:45:58.391Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:46:28.321Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:46:28.404Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:46:58.325Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:46:58.410Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:47:28.316Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:47:28.433Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:47:58.331Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:47:58.421Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:48:28.319Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:48:28.434Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:48:58.335Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:48:58.435Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:49:28.329Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:49:28.440Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 102
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:49:58.457Z",
+        "result": "overflow_broadcast",
+        "count": 2,
+        "topTech": "Ravi Kumar",
+        "score": 100
+      },
+      {
+        "pass": 4,
+        "at": "2026-10-16T08:50:23.305Z",
+        "result": "auto_assigned",
+        "techId": "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+        "techName": "Ravi Kumar",
+        "score": 100
+      }
+    ],
+    "hasReview": false,
+    "createdAt": "2026-10-15T14:00:40.412Z",
+    "acceptedAt": "2026-10-16T08:50:23.304Z",
+    "completedAt": null,
+    "suggestedTechnicianId": "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+    "suggestedTechnicianName": "Ravi Kumar",
+    "suggestedTechScore": 100,
+    "suggestedTechBreakdown": {
+      "skill": 40,
+      "verified": 0,
+      "rating": 25,
+      "acceptance": 15,
+      "availability": 8,
+      "responseSpeed": 5,
+      "reviewTags": 2,
+      "city": 0,
+      "experience": 0,
+      "waitBonus": 5
+    },
+    "lastPassAt": "2026-10-16T08:50:23.305Z",
+    "forcePass": null,
+    "dispatchMode": "auto",
+    "forceAutoAssign": null
+  },
+  {
+    "id": "f76ed48b-d12e-451a-8b25-2c591b70b7c2",
+    "userId": "73b41c78-389e-46e1-80b9-7a41c33a8310",
+    "userName": "thanmay krishna kctk",
+    "userPhone": "09963916962",
+    "userEmail": "thanmay@gmail.com",
+    "productCategory": "Washing Machine",
+    "productName": "samsung",
+    "faultDescription": "e2uidgh320ud",
+    "city": "hyderabad",
+    "urgency": "urgent",
+    "status": "accepted",
+    "technicianId": "24e8c978-0f21-4b96-8b0d-0e1313c75f35",
+    "technicianName": "Anitha Reddy",
+    "technicianPhone": "9876543212",
+    "technicianAvatar": "",
+    "passNumber": 1,
+    "passStatus": "pass1_auto_assigned",
+    "rejectedByTechIds": [],
+    "notifiedTechIds": [
+      "24e8c978-0f21-4b96-8b0d-0e1313c75f35",
+      "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+      "420d4cbf-c3d5-4b82-acaf-5d4b5b7b665f"
+    ],
+    "passLog": [
+      {
+        "pass": 1,
+        "at": "2026-10-16T08:29:38.355Z",
+        "result": "auto_assigned",
+        "techId": "24e8c978-0f21-4b96-8b0d-0e1313c75f35",
+        "techName": "Anitha Reddy",
+        "score": 118
+      }
+    ],
+    "hasReview": false,
+    "createdAt": "2026-10-16T08:29:38.335Z",
+    "acceptedAt": "2026-10-16T08:29:38.355Z",
+    "completedAt": null,
+    "lastPassAt": "2026-10-16T08:29:38.355Z",
+    "suggestedTechnicianId": "24e8c978-0f21-4b96-8b0d-0e1313c75f35",
+    "suggestedTechnicianName": "Anitha Reddy",
+    "suggestedTechScore": 118,
+    "suggestedTechBreakdown": {
+      "skill": 40,
+      "verified": 0,
+      "rating": 24,
+      "acceptance": 15,
+      "availability": 20,
+      "responseSpeed": 5,
+      "reviewTags": 0,
+      "city": 10,
+      "experience": 4,
+      "waitBonus": 0
+    },
+    "forcePass": null
+  }
+]

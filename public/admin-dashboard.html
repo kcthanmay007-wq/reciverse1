@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Admin Dashboard — Reciverse</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<style>
+  body { background: var(--bg); }
+  .admin-shell { display:flex; min-height:100vh; padding-top:0; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 230px; flex-shrink:0;
+    background: var(--card); border-right:1px solid var(--border);
+    display:flex; flex-direction:column;
+    position: fixed; top:0; left:0; bottom:0; z-index:100;
+  }
+  .sidebar-brand {
+    padding:1.4rem 1.5rem; border-bottom:1px solid var(--border);
+    font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;
+  }
+  .sidebar-brand .dot { color:var(--blue); }
+  .admin-pill {
+    background:rgba(249,115,22,.12); color:var(--orange); border:1px solid rgba(249,115,22,.25);
+    border-radius:100px; padding:2px 9px; font-size:.67rem; font-weight:700; letter-spacing:.06em;
+    margin-left:4px;
+  }
+  .sidebar nav { padding:1rem .75rem; flex:1; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px;
+    padding:.65rem .9rem; border-radius:9px; cursor:pointer;
+    font-size:.875rem; font-weight:500; color:var(--light);
+    transition:all .15s; margin-bottom:.2rem; border:none; background:none; width:100%; text-align:left;
+  }
+  .nav-item:hover { background:var(--bg2); color:var(--text); }
+  .nav-item.active { background:var(--blue-lt); color:var(--blue); font-weight:600; }
+  .nav-item .nav-icon { font-size:1rem; width:22px; flex-shrink:0; }
+  .sidebar-footer { padding:1rem .75rem; border-top:1px solid var(--border); }
+
+  /* Main content */
+  .admin-main { margin-left:230px; flex:1; padding:2rem; min-height:100vh; }
+
+  /* Tabs */
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  /* KPI Cards */
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem; }
+  .kpi-grid2 { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:2rem; }
+  @media(max-width:900px) { .kpi-grid,.kpi-grid2 { grid-template-columns:repeat(2,1fr); } }
+  .kpi-card {
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:1.25rem 1.4rem; position:relative; overflow:hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .kpi-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:var(--accent-color, var(--blue));
+  }
+  .kpi-card.blue { --accent-color: var(--blue); }
+  .kpi-card.green { --accent-color: var(--green); }
+  .kpi-card.orange { --accent-color: var(--orange); }
+  .kpi-card.red { --accent-color: var(--red); }
+  .kpi-card.purple { --accent-color: #7c3aed; }
+  .kpi-icon2 { font-size:1.6rem; margin-bottom:.5rem; }
+  .kpi-num { font-size:2rem; font-weight:800; color:var(--text); line-height:1; }
+  .kpi-label { font-size:.78rem; color:var(--muted); margin-top:.35rem; }
+
+  /* Section header */
+  .sec-head {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:1.25rem;
+  }
+  .sec-head h2 { font-size:1.1rem; font-weight:700; }
+  .sec-head p { font-size:.82rem; color:var(--light); }
+
+  /* Table */
+  .tbl-wrap { overflow-x:auto; }
+  .tbl {
+    width:100%; border-collapse:collapse; font-size:.83rem;
+  }
+  .tbl th {
+    text-align:left; padding:.7rem 1rem;
+    border-bottom:1px solid var(--border);
+    color:var(--muted); font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.05em;
+    background:var(--bg2);
+  }
+  .tbl td {
+    padding:.75rem 1rem; border-bottom:1px solid var(--border);
+    vertical-align:middle; color:var(--text2);
+  }
+  .tbl tr:hover td { background:var(--bg2); }
+
+  /* Badges */
+  .badge-status {
+    display:inline-block; padding:3px 10px; border-radius:100px; font-size:.72rem; font-weight:700;
+  }
+  .badge-pending  { background:rgba(249,115,22,.12); color:var(--orange); }
+  .badge-accepted { background:rgba(59,130,246,.12);  color:var(--blue); }
+  .badge-completed{ background:rgba(34,197,94,.12);   color:var(--green); }
+  .badge-banned   { background:rgba(239,68,68,.12);   color:var(--red); }
+  .badge-active   { background:rgba(34,197,94,.12);   color:var(--green); }
+  .badge-verified { background:rgba(59,130,246,.12);  color:var(--blue); font-size:.65rem; }
+
+  /* Action buttons */
+  .act-btn {
+    padding:4px 10px; border-radius:6px; font-size:.75rem; font-weight:600;
+    border:none; cursor:pointer; font-family:inherit; transition:all .15s;
+  }
+  .act-btn.ban    { background:rgba(239,68,68,.12); color:var(--red); border:1px solid rgba(239,68,68,.25); }
+  .act-btn.unban  { background:rgba(34,197,94,.12); color:var(--green); border:1px solid rgba(34,197,94,.25); }
+  .act-btn.verify { background:rgba(59,130,246,.12); color:var(--blue); border:1px solid rgba(59,130,246,.25); }
+  .act-btn.del    { background:rgba(239,68,68,.1); color:var(--red); border:1px solid rgba(239,68,68,.2); }
+  .act-btn:hover { opacity:.8; }
+
+  /* Alert bar */
+  .alert-bar {
+    position:fixed; top:1rem; left:50%; transform:translateX(-50%);
+    padding:.7rem 1.4rem; border-radius:10px; font-size:.87rem; font-weight:600;
+    z-index:999; display:none; box-shadow:var(--shadow);
+  }
+  .alert-bar.ok { background:var(--green-lt); color:var(--green); border:1px solid rgba(22,163,74,0.3); }
+  .alert-bar.err { background:var(--red-lt); color:var(--red); border:1px solid rgba(220,38,38,0.3); }
+
+  /* Stars */
+  .stars { color:var(--yellow); font-size:.85rem; }
+
+  /* Search input */
+  .search-input {
+    background:white; border:1.5px solid var(--border); border-radius:8px;
+    padding:.5rem .9rem; color:var(--text); font-family:inherit; font-size:.84rem;
+    width:220px;
+  }
+  .search-input:focus { outline:none; border-color:var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .search-input::placeholder { color:var(--placeholder); }
+
+  @media(max-width:700px) {
+    .sidebar { width:60px; }
+    .sidebar-brand span, .nav-item span, .admin-pill { display:none; }
+    .admin-main { margin-left:60px; padding:1rem; }
+    .kpi-grid, .kpi-grid2 { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="alertBar" class="alert-bar"></div>
+
+<!-- Pass Log Modal -->
+<div id="passLogModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:1.5rem">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto;padding:1.5rem;box-shadow:var(--shadow-lg)">
+    <div id="passLogContent"></div>
+    <div style="margin-top:1.25rem;text-align:right">
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('passLogModal').style.display='none'">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Receipt Slip Modal -->
+<div id="paymentSlipModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:1.5rem">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:620px;width:100%;max-height:90vh;overflow-y:auto;padding:2rem;box-shadow:var(--shadow-lg)">
+    <div id="slipContent"></div>
+    <div style="margin-top:1.5rem;display:flex;justify-content:space-between;align-items:center">
+      <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ Print Receipt Slip</button>
+      <button class="btn btn-primary btn-sm" onclick="document.getElementById('paymentSlipModal').style.display='none'">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="admin-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      🔧 Reci<span class="dot">verse</span><span class="admin-pill">ADMIN</span>
+    </div>
+    <nav>
+      <button class="nav-item active" onclick="switchTab('overview',this)">
+        <span class="nav-icon">📊</span><span>Overview</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('users',this)">
+        <span class="nav-icon">👤</span><span>Users</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('technicians',this)">
+        <span class="nav-icon">🔧</span><span>Technicians</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('requests',this)">
+        <span class="nav-icon">📋</span><span>Requests</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('payments',this)">
+        <span class="nav-icon">💳</span><span>Payment Slips</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('trust',this)">
+        <span class="nav-icon">🛡️</span><span>Trust & Audit</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="logout()" style="color:var(--red)">
+        <span class="nav-icon">🚪</span><span>Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main">
+
+    <!-- ── OVERVIEW TAB ──────────────────────────────────── -->
+    <div id="tab-overview" class="tab-panel active">
+      <div class="sec-head">
+        <div>
+          <h2>Platform Overview</h2>
+          <p>Real-time stats across all modules</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadAll()">🔄 Refresh</button>
+      </div>
+
+      <!-- Smart Matching Pass Controller -->
+      <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:.75rem">
+          <div>
+            <div style="font-size:1rem;font-weight:700;color:var(--text)">⚡ v4 Auto-Assign Matching Engine</div>
+            <div style="font-size:.82rem;color:var(--light);margin-top:.25rem">Runs every 30s. Urgent → P1 hard-assign instantly. Normal → P3 broadcast. Escalates through P4 if unmatched.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btnAdminPass" onclick="runAdminMatchingPass(this)">⚡ Run Matching Pass Now</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;font-size:.77rem">
+          <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:.5rem .75rem">
+            <div style="color:var(--blue);font-weight:700">⚡ Pass 1 — Urgent</div>
+            <div style="color:var(--light);margin-top:.2rem">Hard auto-assign to #1 scored online tech instantly. City=10, Exp=5</div>
+          </div>
+          <div style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);border-radius:8px;padding:.5rem .75rem">
+            <div style="color:var(--orange);font-weight:700">📣 Pass 2 — Top-5</div>
+            <div style="color:var(--light);margin-top:.2rem">Notify top 5 techs. Wait-bonus +5 for P1-failed requests</div>
+          </div>
+          <div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:8px;padding:.5rem .75rem">
+            <div style="color:#a78bfa;font-weight:700">📡 Pass 3 — Broadcast</div>
+            <div style="color:var(--light);margin-top:.2rem">Normal urgency entry. City=5, Exp=0, includes offline techs</div>
+          </div>
+          <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:.5rem .75rem">
+            <div style="color:var(--red);font-weight:700">🌐 Pass 4 — Overflow</div>
+            <div style="color:var(--light);margin-top:.2rem">City=0, Exp=0. Platform-wide. Up to 20 techs. Last resort</div>
+          </div>
+        </div>
+        <div style="margin-top:.75rem;font-size:.78rem;color:var(--muted)">
+          🎯 <strong style="color:var(--light)">Scoring factors (max ~140 pts):</strong>
+          Skill (40) + Verified (5) + Rating (25) + Acceptance Rate (15) + Capacity (20) + Response Speed (10) + Review Tags (5) + City/Distance (0–10) + Experience (0–5) + Wait Bonus (0–5)
+        </div>
+      </div>
+
+
+      <!-- KPI Row 1 -->
+      <div class="kpi-grid">
+        <div class="kpi-card blue">
+          <div class="kpi-icon2">👤</div>
+          <div class="kpi-num" id="s-users">—</div>
+          <div class="kpi-label">Total Users</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-icon2">🔧</div>
+          <div class="kpi-num" id="s-techs">—</div>
+          <div class="kpi-label">Technicians</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-icon2">📋</div>
+          <div class="kpi-num" id="s-reqs">—</div>
+          <div class="kpi-label">Total Requests</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-icon2">🟢</div>
+          <div class="kpi-num" id="s-online">—</div>
+          <div class="kpi-label">Online Techs Now</div>
+        </div>
+      </div>
+
+      <!-- KPI Row 2 -->
+      <div class="kpi-grid2">
+        <div class="kpi-card blue">
+          <div class="kpi-icon2">🆕</div>
+          <div class="kpi-num" id="s-u7">—</div>
+          <div class="kpi-label">New Users (7 days)</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-icon2">🆕</div>
+          <div class="kpi-num" id="s-t7">—</div>
+          <div class="kpi-label">New Techs (7 days)</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-icon2">📬</div>
+          <div class="kpi-num" id="s-r7">—</div>
+          <div class="kpi-label">New Requests (7 days)</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-icon2">⭐</div>
+          <div class="kpi-num" id="s-rating">—</div>
+          <div class="kpi-label">Avg Platform Rating</div>
+        </div>
+      </div>
+
+      <!-- Request Status Breakdown -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem">
+        <div class="kpi-card orange">
+          <div class="kpi-icon2">⏳</div>
+          <div class="kpi-num" id="s-pending">—</div>
+          <div class="kpi-label">Pending Requests</div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="kpi-icon2">🔨</div>
+          <div class="kpi-num" id="s-accepted">—</div>
+          <div class="kpi-label">In Progress</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-icon2">✅</div>
+          <div class="kpi-num" id="s-completed">—</div>
+          <div class="kpi-label">Completed</div>
+        </div>
+      </div>
+
+      <!-- Top Technicians -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:2rem">
+        <h3 style="font-size:.95rem;margin-bottom:1rem">🏆 Top Technicians by Rating</h3>
+        <div id="topTechsList">Loading...</div>
+      </div>
+
+      <!-- Recent Requests -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem">
+        <h3 style="font-size:.95rem;margin-bottom:1rem">🕐 Recent Requests</h3>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr><th>ID</th><th>Product</th><th>Category</th><th>Status</th><th>City</th><th>Pass</th><th>Date</th></tr>
+            </thead>
+            <tbody id="recentReqsTbl">
+              <tr><td colspan="7" style="color:var(--muted);text-align:center">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── USERS TAB ──────────────────────────────────────── -->
+    <div id="tab-users" class="tab-panel">
+      <div class="sec-head">
+        <div><h2>👤 Users</h2><p id="users-count" style="color:var(--light);font-size:.82rem"></p></div>
+        <input type="text" class="search-input" placeholder="🔍 Search users..." oninput="filterTable('usersTbl',this.value,[0,1])">
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Joined</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="usersTbl">
+              <tr><td colspan="7" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TECHNICIANS TAB ─────────────────────────────────── -->
+    <div id="tab-technicians" class="tab-panel">
+      <div class="sec-head">
+        <div><h2>🔧 Technicians</h2><p id="techs-count" style="color:var(--light);font-size:.82rem"></p></div>
+        <input type="text" class="search-input" placeholder="🔍 Search techs..." oninput="filterTable('techsTbl',this.value,[0,1])">
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Skills</th><th>Rating</th><th>Jobs</th><th>Online</th><th>Verified</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="techsTbl">
+              <tr><td colspan="9" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REQUESTS TAB ───────────────────────────────────── -->
+    <div id="tab-requests" class="tab-panel">
+      <div class="sec-head">
+        <div><h2>📋 All Requests</h2><p id="reqs-count" style="color:var(--light);font-size:.82rem"></p></div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <select id="statusFilter" onchange="renderRequestsTab()" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:.5rem .9rem;color:var(--text);font-family:inherit;font-size:.84rem">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="completed">Completed</option>
+          </select>
+          <input type="text" class="search-input" placeholder="🔍 Search..." oninput="renderRequestsTab(this.value)">
+        </div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr><th>ID</th><th>Product</th><th>Category</th><th>User</th><th>Tech</th><th>Status</th><th>Pass</th><th>City</th><th>Created</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="requestsTbl">
+              <tr><td colspan="10" style="color:var(--muted);text-align:center;padding:2rem">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAYMENTS & SLIPS TAB ───────────────────────── -->
+    <div id="tab-payments" class="tab-panel">
+      <div class="sec-head">
+        <div>
+          <h2>Payment Slips & Receipts</h2>
+          <p id="payments-count">All verified transactions, customer invoices, and audit slips</p>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <input type="text" class="search-input" placeholder="🔍 Search slip, customer, tech..." oninput="renderPaymentsTab(this.value)">
+        </div>
+      </div>
+
+      <div class="kpi-grid" style="margin-bottom:1.5rem">
+        <div class="kpi-card green">
+          <div class="kpi-icon2">💰</div>
+          <div class="kpi-num" id="pay-total-amt">₹0</div>
+          <div class="kpi-lbl">Total Volume Processed</div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="kpi-icon2">🧾</div>
+          <div class="kpi-num" id="pay-total-count">0</div>
+          <div class="kpi-lbl">Verified Payment Slips</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-icon2">🛡️</div>
+          <div class="kpi-num" id="pay-avg-amt">₹0</div>
+          <div class="kpi-lbl">Avg. Ticket Value</div>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Slip / Receipt No</th>
+                <th>Customer</th>
+                <th>Technician</th>
+                <th>Service Category</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTbl">
+              <tr><td colspan="9" style="color:var(--muted);text-align:center;padding:2rem">Loading payment records...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TRUST & AUDIT TAB ────────────────────────────── -->
+    <div id="tab-trust" class="tab-panel">
+      <div class="sec-head">
+        <div>
+          <h2>🛡️ Trust & Mutual Assurance Audit Trail</h2>
+          <p id="audit-count">Detailed logs of technician assignments, customer rejections, job releases, and dual-handshake completions</p>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <input type="text" class="search-input" placeholder="🔍 Search event, party, reason..." oninput="renderTrustTab(this.value)">
+        </div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Event Type</th>
+                <th>Request ID</th>
+                <th>Customer</th>
+                <th>Technician</th>
+                <th>Assurance Details / Reason / PIN</th>
+              </tr>
+            </thead>
+            <tbody id="auditTbl">
+              <tr><td colspan="6" style="color:var(--muted);text-align:center;padding:2rem">Loading audit logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/js/main.js"></script>
+<script>
+  const adminToken = () => localStorage.getItem('reciverse_admin_token');
+  const AGET  = url => fetch(url, { headers: { Authorization: 'Bearer ' + adminToken() } }).then(r => r.json());
+  const APUT  = (url, body={}) => fetch(url, { method:'PUT', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+adminToken() }, body:JSON.stringify(body) }).then(r=>r.json());
+  const APOST = (url, body={}) => fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+adminToken() }, body:JSON.stringify(body) }).then(r=>r.json());
+  const ADEL  = url => fetch(url, { method:'DELETE', headers:{ Authorization:'Bearer '+adminToken() } }).then(r=>r.json());
+
+  // ── Auth guard ─────────────────────────────────────────
+  if (!adminToken()) { window.location.href = 'admin-login.html'; }
+
+  let statsData = {};
+  let allUsers = [], allTechs = [], allRequests = [], allPayments = [], allAuditLogs = [];
+
+  function showAlert(msg, type='ok') {
+    const b = document.getElementById('alertBar');
+    b.textContent = msg; b.className = 'alert-bar ' + type; b.style.display = 'block';
+    setTimeout(() => b.style.display='none', 3000);
+  }
+
+  async function runAdminMatchingPass(btn) {
+    if (btn) { btn.disabled=true; btn.textContent='Running…'; }
+    try {
+      const res = await APOST('/api/admin/run-matching-pass');
+      if (res.stats) {
+        showAlert(`⚡ Pass completed: ${res.stats.assigned} assigned, ${res.stats.unmatched} unmatched (${res.stats.total} pending)`, 'ok');
+        await loadAll();
+      }
+    } catch {
+      showAlert('Could not run matching pass.', 'err');
+    }
+    if (btn) { btn.disabled=false; btn.textContent='⚡ Run Matching Pass Now'; }
+  }
+
+  // ── Tab switching ─────────────────────────────────────
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('tab-'+name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── Helpers ───────────────────────────────────────────
+  function shortId(id) { return id ? id.slice(0,8) + '…' : '—'; }
+  function fmtDate(d)  { return d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}) : '—'; }
+  function statusBadge(s) {
+    const m = { pending:'badge-pending', accepted:'badge-accepted', pending_completion:'badge-accepted', completed:'badge-completed' };
+    const labels = { pending_completion: '🔔 Awaiting Confirmation' };
+    return `<span class="badge-status ${m[s]||''}">${labels[s] || s || '—'}</span>`;
+  }
+  function stars(r) {
+    if (!r) return '<span style="color:var(--muted)">No rating</span>';
+    return '⭐'.repeat(Math.round(r)) + ` <span style="color:var(--yellow);font-weight:700">${r}</span>`;
+  }
+
+  // ── Load everything ───────────────────────────────────
+  async function loadAll() {
+    try {
+      [statsData, allUsers, allTechs, allRequests, allPayments, allAuditLogs] = await Promise.all([
+        AGET('/api/admin/stats'),
+        AGET('/api/admin/users'),
+        AGET('/api/admin/technicians'),
+        AGET('/api/admin/requests'),
+        AGET('/api/admin/payments').catch(() => []),
+        AGET('/api/admin/audit-logs').catch(() => [])
+      ]);
+      renderStats();
+      renderTopTechs();
+      renderRecentRequests();
+      renderUsersTab();
+      renderTechsTab();
+      renderRequestsTab();
+      renderPaymentsTab();
+      renderTrustTab();
+    } catch(e) {
+      showAlert('Failed to load data. Are you logged in?', 'err');
+    }
+  }
+
+  function renderStats() {
+    const s = statsData;
+    document.getElementById('s-users').textContent    = s.totalUsers    ?? '—';
+    document.getElementById('s-techs').textContent    = s.totalTechs    ?? '—';
+    document.getElementById('s-reqs').textContent     = s.totalRequests ?? '—';
+    document.getElementById('s-online').textContent   = s.onlineTechs   ?? '—';
+    document.getElementById('s-u7').textContent       = s.newUsers7d    ?? '—';
+    document.getElementById('s-t7').textContent       = s.newTechs7d    ?? '—';
+    document.getElementById('s-r7').textContent       = s.newReqs7d     ?? '—';
+    document.getElementById('s-rating').textContent   = s.avgPlatformRating ?? '—';
+    document.getElementById('s-pending').textContent  = s.byStatus?.pending   ?? 0;
+    document.getElementById('s-accepted').textContent = s.byStatus?.accepted  ?? 0;
+    document.getElementById('s-completed').textContent= s.byStatus?.completed ?? 0;
+  }
+
+  function renderTopTechs() {
+    const top = [...allTechs]
+      .filter(t => (t.rating||0) > 0)
+      .sort((a,b) => (b.rating||0) - (a.rating||0))
+      .slice(0,5);
+    const el = document.getElementById('topTechsList');
+    if (!top.length) { el.innerHTML = '<p style="color:var(--muted)">No rated technicians yet.</p>'; return; }
+    el.innerHTML = top.map((t,i) => `
+      <div style="display:flex;align-items:center;gap:1rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
+        <div style="width:28px;height:28px;border-radius:50%;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:var(--blue)">${i+1}</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:.88rem">${t.name}</div>
+          <div style="font-size:.75rem;color:var(--muted)">${(t.skills||[]).slice(0,2).join(', ')}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="color:var(--yellow);font-weight:700;font-size:.9rem">⭐ ${t.rating}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${t.totalJobs||0} jobs</div>
+        </div>
+        <span class="${t.isOnline?'badge-active':'badge-banned'} badge-status" style="font-size:.68rem">${t.isOnline?'Online':'Offline'}</span>
+      </div>`).join('');
+  }
+
+  function renderRecentRequests() {
+    const recent = [...allRequests].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,10);
+    const tb = document.getElementById('recentReqsTbl');
+    if (!recent.length) { tb.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:1.5rem">No requests yet.</td></tr>'; return; }
+    tb.innerHTML = recent.map(r => `
+      <tr>
+        <td style="font-family:monospace;font-size:.75rem;color:var(--muted)">${shortId(r.id)}</td>
+        <td>${r.productName||'—'}</td>
+        <td style="color:var(--light);font-size:.8rem">${r.productCategory||'—'}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td style="color:var(--light)">${r.city||'—'}</td>
+        <td style="color:var(--muted);font-size:.8rem">P${r.passNumber||1}</td>
+        <td style="color:var(--muted);font-size:.8rem">${fmtDate(r.createdAt)}</td>
+      </tr>`).join('');
+  }
+
+  // ── Users Tab ─────────────────────────────────────────
+  function renderUsersTab() {
+    document.getElementById('users-count').textContent = `${allUsers.length} registered users`;
+    const tb = document.getElementById('usersTbl');
+    if (!allUsers.length) { tb.innerHTML='<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:2rem">No users yet.</td></tr>'; return; }
+    tb.innerHTML = allUsers.map(u => `
+      <tr>
+        <td><strong>${u.name}</strong></td>
+        <td style="color:var(--light);font-size:.82rem">${u.email}</td>
+        <td style="color:var(--muted);font-size:.82rem">${u.phone||'—'}</td>
+        <td style="color:var(--muted)">${u.city||'—'}</td>
+        <td style="color:var(--muted);font-size:.78rem">${fmtDate(u.createdAt)}</td>
+        <td>${u.isBanned ? '<span class="badge-status badge-banned">Banned</span>' : '<span class="badge-status badge-active">Active</span>'}</td>
+        <td>
+          <button class="act-btn ${u.isBanned?'unban':'ban'}" onclick="banUser('${u.id}',${u.isBanned},this)">
+            ${u.isBanned ? '✅ Unban' : '🚫 Ban'}
+          </button>
+        </td>
+      </tr>`).join('');
+  }
+
+  async function banUser(id, isBanned, btn) {
+    btn.disabled = true; btn.textContent = '…';
+    const res = await APUT(`/api/admin/users/${id}/ban`);
+    if (res.error) { showAlert(res.error, 'err'); btn.disabled=false; return; }
+    showAlert(res.isBanned ? 'User banned.' : 'User unbanned.', 'ok');
+    const u = allUsers.find(x=>x.id===id);
+    if (u) u.isBanned = res.isBanned;
+    renderUsersTab();
+  }
+
+  // ── Technicians Tab ───────────────────────────────────
+  function renderTechsTab() {
+    document.getElementById('techs-count').textContent = `${allTechs.length} registered technicians`;
+    const tb = document.getElementById('techsTbl');
+    if (!allTechs.length) { tb.innerHTML='<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:2rem">No techs yet.</td></tr>'; return; }
+    tb.innerHTML = allTechs.map(t => `
+      <tr>
+        <td><strong>${t.name}</strong><br><span style="font-size:.73rem;color:var(--muted)">${t.city||'—'} · ${t.experience||'—'}</span></td>
+        <td style="color:var(--light);font-size:.8rem">${t.email}</td>
+        <td style="font-size:.78rem;color:var(--light)">${(t.skills||[]).length} skills<br><span style="color:var(--muted)">${(t.skills||[]).slice(0,2).join(', ')}${(t.skills||[]).length>2?'…':''}</span></td>
+        <td>${t.rating ? `<span style="color:var(--yellow)">⭐ ${t.rating}</span><br><span style="font-size:.72rem;color:var(--muted)">${t.ratingCount||0} reviews</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+        <td style="color:var(--text);font-weight:600">${t.totalJobs||0}<br><span style="font-size:.72rem;color:var(--muted)">${t.activeJobs||0} active</span></td>
+        <td><span class="badge-status ${t.isOnline?'badge-active':'badge-banned'}" style="font-size:.7rem">${t.isOnline?'🟢 Online':'⚫ Offline'}</span></td>
+        <td>${t.verified ? '<span class="badge-status badge-verified">✓ Verified</span>' : '<span style="color:var(--muted);font-size:.75rem">—</span>'}</td>
+        <td>${t.isBanned ? '<span class="badge-status badge-banned">Banned</span>' : '<span class="badge-status badge-active">Active</span>'}</td>
+        <td style="display:flex;flex-direction:column;gap:4px">
+          <button class="act-btn ${t.isBanned?'unban':'ban'}" onclick="banTech('${t.id}',${t.isBanned},this)">${t.isBanned?'✅ Unban':'🚫 Ban'}</button>
+          <button class="act-btn verify" onclick="verifyTech('${t.id}',${t.verified},this)">${t.verified?'Unverify':'✓ Verify'}</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  async function banTech(id, isBanned, btn) {
+    btn.disabled=true; btn.textContent='…';
+    const res = await APUT(`/api/admin/technicians/${id}/ban`);
+    if (res.error) { showAlert(res.error,'err'); btn.disabled=false; return; }
+    showAlert(res.isBanned?'Technician banned.':'Technician unbanned.','ok');
+    const t = allTechs.find(x=>x.id===id);
+    if (t) t.isBanned=res.isBanned;
+    renderTechsTab();
+  }
+  async function verifyTech(id, verified, btn) {
+    btn.disabled=true; btn.textContent='…';
+    const res = await APUT(`/api/admin/technicians/${id}/verify`);
+    if (res.error) { showAlert(res.error,'err'); btn.disabled=false; return; }
+    showAlert(res.verified?'Technician verified!':'Technician unverified.','ok');
+    const t = allTechs.find(x=>x.id===id);
+    if (t) t.verified=res.verified;
+    renderTechsTab();
+  }
+
+  // ── Requests Tab ──────────────────────────────────────
+  function renderRequestsTab(searchVal) {
+    const statusFilter = document.getElementById('statusFilter')?.value || '';
+    const q = (typeof searchVal === 'string' ? searchVal : '').toLowerCase();
+    let list = [...allRequests].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+    if (statusFilter) list = list.filter(r => r.status === statusFilter);
+    if (q) list = list.filter(r =>
+      (r.productName||'').toLowerCase().includes(q) ||
+      (r.productCategory||'').toLowerCase().includes(q) ||
+      (r.technicianName||'').toLowerCase().includes(q) ||
+      (r.city||'').toLowerCase().includes(q)
+    );
+    document.getElementById('reqs-count').textContent = `${list.length} requests`;
+    const tb = document.getElementById('requestsTbl');
+    if (!list.length) { tb.innerHTML='<tr><td colspan="10" style="color:var(--muted);text-align:center;padding:2rem">No requests found.</td></tr>'; return; }
+    tb.innerHTML = list.map(r => `
+      <tr>
+        <td style="font-family:monospace;font-size:.73rem;color:var(--muted)">${shortId(r.id)}</td>
+        <td style="font-size:.84rem">${r.productName||'—'}</td>
+        <td style="font-size:.78rem;color:var(--light)">${r.productCategory||'—'}</td>
+        <td style="font-size:.78rem;color:var(--muted)">${r.userName||'—'}</td>
+        <td style="font-size:.78rem;color:${r.technicianName?'var(--green)':'var(--muted)'}">${r.technicianName||'Unassigned'}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td style="color:var(--muted);font-size:.78rem">P${r.passNumber||1}</td>
+        <td style="color:var(--muted)">${r.city||'—'}</td>
+        <td style="color:var(--muted);font-size:.77rem">${fmtDate(r.createdAt)}</td>
+        <td>
+          <button class="act-btn" onclick="showPassLog('${r.id}')" style="background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.25);margin-right:4px">📜 Log</button>
+          <button class="act-btn del" onclick="deleteRequest('${r.id}',this)">🗑 Delete</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function showPassLog(id) {
+    const r = allRequests.find(x => x.id === id);
+    if (!r) return;
+    const log = r.passLog || [];
+    let content = `
+      <div style="font-weight:700;font-size:1.05rem;color:var(--text);margin-bottom:.3rem">📜 Matching Pass Audit Trail</div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">
+        Request: <strong style="color:var(--light)">${r.productCategory} (${r.productName||'—'})</strong> · ${r.city} · ${r.urgency||'normal'}
+      </div>
+    `;
+    if (!log.length) {
+      content += '<p style="color:var(--muted);font-size:.84rem;padding:1rem;text-align:center;background:var(--bg2);border-radius:8px">No pass log events recorded yet.</p>';
+    } else {
+      content += log.map((item, i) => `
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.65rem .85rem;margin-bottom:.5rem;font-size:.82rem">
+          <div style="display:flex;justify-content:space-between;color:var(--blue);font-weight:700">
+            <span>Pass ${item.pass} · ${item.result}</span>
+            <span style="color:var(--muted);font-weight:400;font-size:.73rem">${fmtDate(item.at)}</span>
+          </div>
+          ${item.techName ? `<div style="margin-top:.3rem;color:var(--text)">Candidate: <strong style="color:var(--green)">${item.techName}</strong> ${item.score ? `<span style="color:var(--blue)">(Score: ${item.score} pts)</span>` : ''}</div>` : ''}
+          ${item.count ? `<div style="margin-top:.2rem;color:var(--muted);font-size:.76rem">Pool: ${item.count} candidate technicians evaluated</div>` : ''}
+        </div>
+      `).join('');
+    }
+    document.getElementById('passLogContent').innerHTML = content;
+    document.getElementById('passLogModal').style.display = 'flex';
+  }
+
+  async function deleteRequest(id, btn) {
+    if (!confirm('Delete this request permanently?')) return;
+    btn.disabled=true; btn.textContent='…';
+    const res = await ADEL(`/api/admin/requests/${id}`);
+    if (res.error) { showAlert(res.error,'err'); btn.disabled=false; return; }
+    showAlert('Request deleted.','ok');
+    allRequests = allRequests.filter(r=>r.id!==id);
+    renderRequestsTab();
+    renderRecentRequests();
+    if(statsData.byStatus) {
+      const old = allRequests.find(r=>r.id===id);
+      if(old && statsData.byStatus[old.status]) statsData.byStatus[old.status]--;
+      statsData.totalRequests = (statsData.totalRequests||1)-1;
+      renderStats();
+    }
+  }
+
+  // ── Table search filter helper ─────────────────────────
+  function filterTable(tbId, q, cols) {
+    const rows = document.getElementById(tbId)?.querySelectorAll('tr') || [];
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (!cells.length) return;
+      const text = cols.map(c => cells[c]?.textContent||'').join(' ').toLowerCase();
+      row.style.display = text.includes(q.toLowerCase()) ? '' : 'none';
+    });
+  }
+
+  // ── Payments & Slips Tab ───────────────────────────────
+  function renderPaymentsTab(searchVal) {
+    const q = (typeof searchVal === 'string' ? searchVal : '').toLowerCase();
+    let list = [...allPayments].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (q) {
+      list = list.filter(p =>
+        (p.id||'').toLowerCase().includes(q) ||
+        (p.customerName||'').toLowerCase().includes(q) ||
+        (p.technicianName||'').toLowerCase().includes(q) ||
+        (p.serviceCategory||'').toLowerCase().includes(q) ||
+        (p.paymentMethod||'').toLowerCase().includes(q)
+      );
+    }
+
+    const totalAmt = allPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+    const count = allPayments.length;
+    const avgAmt = count > 0 ? Math.round(totalAmt / count) : 0;
+
+    const elTotalAmt = document.getElementById('pay-total-amt');
+    const elTotalCount = document.getElementById('pay-total-count');
+    const elAvgAmt = document.getElementById('pay-avg-amt');
+    const elCount = document.getElementById('payments-count');
+
+    if (elTotalAmt) elTotalAmt.textContent = `₹${totalAmt.toLocaleString('en-IN')}`;
+    if (elTotalCount) elTotalCount.textContent = count;
+    if (elAvgAmt) elAvgAmt.textContent = `₹${avgAmt.toLocaleString('en-IN')}`;
+    if (elCount) elCount.textContent = `${list.length} verified payment slips & invoices`;
+
+    const tb = document.getElementById('paymentsTbl');
+    if (!tb) return;
+    if (!list.length) {
+      tb.innerHTML = '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:2rem">No payment records found.</td></tr>';
+      return;
+    }
+
+    tb.innerHTML = list.map(p => `
+      <tr>
+        <td style="font-family:monospace;font-size:.78rem;font-weight:700;color:var(--text)">${shortId(p.id)}</td>
+        <td><strong>${p.customerName || 'Customer'}</strong></td>
+        <td style="color:var(--light)">${p.technicianName || 'Technician'}</td>
+        <td style="color:var(--muted);font-size:.82rem">${p.serviceCategory || 'Repair Service'}</td>
+        <td style="font-weight:700;color:var(--primary);font-size:.92rem">₹${Number(p.amount||0).toLocaleString('en-IN')}</td>
+        <td><span class="badge-status badge-active" style="font-size:.74rem">${p.paymentMethod || 'Razorpay (Test)'}</span></td>
+        <td style="color:var(--muted);font-size:.78rem">${fmtDate(p.createdAt)}</td>
+        <td><span class="badge-status badge-completed">Paid</span></td>
+        <td>
+          <button class="act-btn verify" onclick="viewSlip('${p.id}')">🧾 View Slip</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function viewSlip(paymentId) {
+    try {
+      const data = await AGET(`/api/admin/payments/${paymentId}/slip`);
+      if (data.error) { showAlert(data.error, 'err'); return; }
+
+      const slipHtml = `
+        <div style="border-bottom:2px dashed var(--border);padding-bottom:1.25rem;margin-bottom:1.25rem;text-align:center">
+          <div style="display:inline-block;padding:4px 10px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:20px;font-size:.75rem;font-weight:700;color:var(--blue);margin-bottom:.5rem">
+            OFFICIAL SERVICE PAYMENT SLIP
+          </div>
+          <h2 style="font-size:1.5rem;font-weight:800;margin:0;color:var(--text)">🔧 Reci<span style="color:var(--primary)">verse</span></h2>
+          <p style="font-size:.82rem;color:var(--muted);margin:.3rem 0 0">Verified On-Demand Repair Assurance System</p>
+          <div style="margin-top:.75rem;display:flex;justify-content:center;gap:1.5rem;font-size:.8rem;color:var(--light)">
+            <div>Slip No: <strong style="color:var(--text)">${data.receiptNumber}</strong></div>
+            <div>Date: <strong style="color:var(--text)">${new Date(data.date).toLocaleString('en-IN')}</strong></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;font-size:.84rem">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.85rem">
+            <div style="font-size:.74rem;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:.35rem">Billed To (Customer)</div>
+            <div style="font-weight:700;font-size:.92rem;color:var(--text)">${data.customer.name}</div>
+            <div style="color:var(--light);font-size:.8rem">${data.customer.email}</div>
+            <div style="color:var(--muted);font-size:.78rem">${data.customer.phone || 'Phone on file'}</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.85rem">
+            <div style="font-size:.74rem;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:.35rem">Service Fulfilled By</div>
+            <div style="font-weight:700;font-size:.92rem;color:var(--text)">${data.technician.name}</div>
+            <div style="color:var(--light);font-size:.8rem">${data.technician.email}</div>
+            <div style="color:var(--green);font-size:.78rem">✓ Verified Expert Partner</div>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.25rem">
+          <table style="width:100%;border-collapse:collapse;font-size:.84rem;text-align:left">
+            <thead>
+              <tr style="background:var(--bg2);border-bottom:1px solid var(--border);color:var(--muted)">
+                <th style="padding:.65rem .9rem">Description</th>
+                <th style="padding:.65rem .9rem;text-align:right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:.75rem .9rem">
+                  <strong style="color:var(--text)">${data.service.category} Repair Service</strong>
+                  <div style="font-size:.76rem;color:var(--muted)">Item: ${data.service.productName || 'Specified Product'} · Req: ${shortId(data.service.requestId)}</div>
+                </td>
+                <td style="padding:.75rem .9rem;text-align:right;font-weight:600;color:var(--text)">₹${data.payment.amount}</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);font-size:.8rem;color:var(--muted)">
+                <td style="padding:.5rem .9rem">Platform Warranty & Mutual Assurance Fee</td>
+                <td style="padding:.5rem .9rem;text-align:right;color:var(--green)">INCLUDED (₹0)</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);font-size:.8rem;color:var(--muted)">
+                <td style="padding:.5rem .9rem">GST / Service Tax (18% inclusive)</td>
+                <td style="padding:.5rem .9rem;text-align:right">₹${Math.round(data.payment.amount * 0.18)}</td>
+              </tr>
+              <tr style="background:var(--bg2);font-weight:800;font-size:.95rem">
+                <td style="padding:.75rem .9rem;color:var(--text)">TOTAL SETTLEMENT PAID</td>
+                <td style="padding:.75rem .9rem;text-align:right;color:var(--primary)">₹${data.payment.amount}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:.85rem;margin-bottom:1rem;display:flex;align-items:center;gap:.75rem">
+          <div style="font-size:1.4rem">🛡️</div>
+          <div style="font-size:.8rem">
+            <div style="font-weight:700;color:var(--green)">Mutual Assurance & Two-Way Completion Verified</div>
+            <div style="color:var(--light);margin-top:.15rem">
+              Technician completed work: ${data.verification.techCompletedAt ? fmtDate(data.verification.techCompletedAt) : 'Recorded'} · Customer approved work: ${data.verification.customerApprovedAt ? fmtDate(data.verification.customerApprovedAt) : 'Verified via OTP'}
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:.76rem;color:var(--muted)">
+          <div>Method: <strong style="color:var(--light)">${data.payment.method}</strong> · Status: <span style="color:var(--green);font-weight:700">SUCCESS</span></div>
+          <div>Ref: <span style="font-family:monospace">${data.payment.paymentId}</span></div>
+        </div>
+      `;
+      document.getElementById('slipContent').innerHTML = slipHtml;
+      document.getElementById('paymentSlipModal').style.display = 'flex';
+    } catch(err) {
+      showAlert('Could not load payment slip.', 'err');
+    }
+  }
+
+  // ── Trust & Audit Trail Tab ────────────────────────────
+  function renderTrustTab(searchVal) {
+    const q = (typeof searchVal === 'string' ? searchVal : '').toLowerCase();
+    let list = [...allAuditLogs];
+    if (q) {
+      list = list.filter(item =>
+        (item.eventType||'').toLowerCase().includes(q) ||
+        (item.customerName||'').toLowerCase().includes(q) ||
+        (item.technicianName||'').toLowerCase().includes(q) ||
+        (item.requestId||'').toLowerCase().includes(q) ||
+        (item.details||'').toLowerCase().includes(q)
+      );
+    }
+
+    const elCount = document.getElementById('audit-count');
+    if (elCount) elCount.textContent = `${list.length} assurance & handshake events recorded`;
+
+    const tb = document.getElementById('auditTbl');
+    if (!tb) return;
+    if (!list.length) {
+      tb.innerHTML = '<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:2rem">No audit trail events logged yet.</td></tr>';
+      return;
+    }
+
+    const eventBadges = {
+      TECH_ASSIGNED: '<span class="badge-status badge-active" style="background:rgba(59,130,246,.15);color:var(--blue)">⚡ Auto-Assigned</span>',
+      TECH_ACCEPTED: '<span class="badge-status badge-accepted">✓ Accepted</span>',
+      TECH_REJECTED: '<span class="badge-status badge-banned" style="background:rgba(239,68,68,.15);color:var(--red)">✕ Tech Rejected by User</span>',
+      TECH_RELEASED: '<span class="badge-status badge-banned" style="background:rgba(249,115,22,.15);color:var(--orange)">⚠️ Tech Released Job</span>',
+      WORK_SUBMITTED: '<span class="badge-status" style="background:rgba(168,85,247,.15);color:#a78bfa">🔔 Work Finished (PIN Issued)</span>',
+      WORK_CONFIRMED: '<span class="badge-status badge-verified">✅ Customer Confirmed</span>',
+      WORK_DISPUTED: '<span class="badge-status badge-banned">⚠️ Customer Disputed</span>'
+    };
+
+    tb.innerHTML = list.map(item => `
+      <tr>
+        <td style="font-size:.78rem;color:var(--muted);white-space:nowrap">${new Date(item.timestamp).toLocaleString('en-IN')}</td>
+        <td>${eventBadges[item.eventType] || `<span class="badge-status badge-pending">${item.eventType}</span>`}</td>
+        <td style="font-family:monospace;font-size:.78rem;color:var(--text)">${shortId(item.requestId)}</td>
+        <td><strong style="font-size:.82rem">${item.customerName || '—'}</strong></td>
+        <td><span style="font-size:.82rem;color:var(--light)">${item.technicianName || '—'}</span></td>
+        <td style="font-size:.82rem;color:var(--text);max-width:320px">${item.details || '—'}</td>
+      </tr>
+    `).join('');
+  }
+
+  function logout() {
+    localStorage.removeItem('reciverse_admin_token');
+    window.location.href = 'admin-login.html';
+  }
+
+  // ── Boot ──────────────────────────────────────────────
+  loadAll();
+  // Auto-refresh every 60 seconds
+  setInterval(loadAll, 60000);
+</script>
+</body>
+</html>

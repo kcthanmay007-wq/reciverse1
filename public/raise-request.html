@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Raise a Repair Request — Reciverse</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="icon">🔧</span>Reci<span class="dot">verse</span></a>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <a href="/user-dashboard.html" class="btn btn-ghost btn-sm">Back to Dashboard</a>
+    <a href="/user-profile.html" style="font-size:.85rem;color:var(--light);padding:6px 10px;text-decoration:none">Profile</a>
+    <button class="btn btn-ghost btn-sm" onclick="Auth.logoutUser()">Logout</button>
+  </div>
+</nav>
+
+<div class="dash-shell">
+  <div class="dash-top">
+    <div>
+      <h2>Raise a Repair Request</h2>
+      <p>Describe your problem and we'll find the right technician for you.</p>
+    </div>
+  </div>
+
+  <div class="dash-body" style="max-width:860px">
+
+    <!-- Step 1: Request Form -->
+    <div id="formSection">
+      <div class="sh">Step 1 — Describe Your Problem</div>
+      <div class="card">
+        <div class="alert" id="alertBox"></div>
+        <form id="requestForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Product Category *</label>
+              <select id="productCategory" required>
+                <option value="">— Select product —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Product Name / Model</label>
+              <input type="text" id="productName" placeholder="e.g. Samsung WF front-load"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Describe the Fault *</label>
+            <textarea id="faultDescription" placeholder="What's wrong? e.g. Washing machine drum is not spinning. It makes a noise but doesn't rotate. Started 2 days ago." required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Your City *</label>
+              <input type="text" id="city" placeholder="Hyderabad"/>
+            </div>
+            <div class="form-group">
+              <label>Dispatch Mode</label>
+              <select id="urgency">
+                <option value="urgent" selected>Auto-Assign (Instant — Best Partner)</option>
+                <option value="normal">Open Broadcast (Technicians Self-Accept)</option>
+              </select>
+              <div style="font-size:.76rem;color:var(--muted);margin-top:.4rem;line-height:1.5">
+                <strong>Auto-Assign:</strong> Instantly assigns the highest-rated verified technician in your city.
+                <strong>Broadcast:</strong> Posts to all nearby technicians — they self-accept.
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+            Find Matching Technician
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Step 2: Matched Technicians -->
+    <div id="matchSection" style="display:none">
+      <div class="sh" style="margin-top:2rem">
+        Step 2 — Technician Assignment Status
+        <a href="/user-dashboard.html">Back to Dashboard</a>
+      </div>
+      <div id="assignBanner" style="border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:.88rem"></div>
+      <div id="techList"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script>
+  if (!Auth.requireUser()) {}
+
+  // Populate product dropdown
+  const sel = document.getElementById('productCategory');
+  PRODUCTS.forEach(p => { const o = document.createElement('option'); o.value=p; o.textContent=p; sel.appendChild(o); });
+
+  // Check if viewing an existing request
+  const params = new URLSearchParams(location.search);
+  const viewId = params.get('view');
+  if (viewId) loadExistingRequest(viewId);
+
+  async function loadExistingRequest(id) {
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('matchSection').style.display = 'block';
+    document.getElementById('techList').innerHTML = '<div class="empty"><div class="spinner"></div><p style="margin-top:1rem">Loading matches...</p></div>';
+    try {
+      const res = await GET('/api/requests/' + id, Auth.userToken());
+      if (res.error) { document.getElementById('techList').innerHTML = '<div class="empty"><h3>Could not load request</h3></div>'; return; }
+      renderTechs(res.matchedTechnicians || []);
+    } catch { document.getElementById('techList').innerHTML = '<div class="empty"><h3>Server error</h3></div>'; }
+  }
+
+  document.getElementById('requestForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn  = document.getElementById('submitBtn');
+    const alrt = document.getElementById('alertBox');
+    hideAlert(alrt);
+    btnLoading(btn, true);
+
+    const isAuto = document.getElementById('urgency').value === 'urgent';
+    const body = {
+      productCategory:  document.getElementById('productCategory').value,
+      productName:      document.getElementById('productName').value.trim(),
+      faultDescription: document.getElementById('faultDescription').value.trim(),
+      city:             document.getElementById('city').value.trim(),
+      urgency:          document.getElementById('urgency').value,
+      dispatchMode:     isAuto ? 'auto' : 'broadcast'
+    };
+
+    if (!body.productCategory) { showAlert(alrt,'Please select a product category.'); btnLoading(btn,false); return; }
+    if (!body.faultDescription) { showAlert(alrt,'Please describe the fault.'); btnLoading(btn,false); return; }
+
+    try {
+      const res = await POST('/api/requests', body, Auth.userToken());
+      if (res.error) { showAlert(alrt, res.error); btnLoading(btn, false); return; }
+
+      document.getElementById('formSection').style.display = 'none';
+      document.getElementById('matchSection').style.display = 'block';
+
+      // Show assignment result banner
+      const pi  = res.passInfo || {};
+      const reqId = res.request?.id;
+      const banner = document.getElementById('assignBanner');
+
+      if (pi.autoAssigned && pi.technicianName) {
+        banner.style.cssText = 'background:var(--green-lt);border:1px solid rgba(22,163,74,0.2);border-radius:var(--r2);padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:.88rem';
+        banner.innerHTML = `
+          <strong style="color:var(--green)">Auto-Assigned!</strong>
+          Your repair request was instantly assigned to <strong style="color:var(--text)">${pi.technicianName}</strong>.
+          <br/><span style="font-size:.8rem;color:var(--muted)">They've been notified and will contact you shortly.</span>
+          <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap">
+            <a href="/user-dashboard.html" class="btn btn-primary btn-sm">Track on Dashboard</a>
+            <a href="/raise-request.html" class="btn btn-outline btn-sm">+ Raise Another</a>
+          </div>
+        `;
+      } else {
+        banner.style.cssText = 'background:var(--blue-lt);border:1px solid rgba(37,99,235,0.2);border-radius:var(--r2);padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:.88rem';
+        banner.innerHTML = `
+          <strong style="color:var(--blue)">Request Broadcasted!</strong>
+          <br/><span style="color:var(--text2)">${pi.passLabel || 'Your request is live. Technicians in your area have been notified.'}</span>
+          ${pi.suggestedTechnicianName ? '<br/>Best candidate: <strong>' + pi.suggestedTechnicianName + '</strong> (Score: ' + pi.suggestedTechScore + ')' : ''}
+          <div style="margin-top:.85rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-primary btn-sm" onclick="instantAutoAssign('${reqId}',this)">
+              Auto-Assign Best Tech Now
+            </button>
+            <a href="/user-dashboard.html" class="btn btn-outline btn-sm">Go to Dashboard</a>
+          </div>
+        `;
+      }
+
+      renderTechs(res.matchedTechnicians || []);
+    } catch {
+      showAlert(alrt, 'Server error. Is the server running?');
+      btnLoading(btn, false);
+    }
+  });
+
+  async function instantAutoAssign(id, btn) {
+    if (!id) return;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Assigning...';
+    btn.disabled = true;
+    try {
+      const res = await POST('/api/requests/' + id + '/auto-assign', {}, Auth.userToken());
+      if (res.error) {
+        alert(res.error);
+      } else {
+        window.location.href = '/user-dashboard.html';
+      }
+    } catch {
+      alert('Error triggering auto-assignment');
+    }
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+
+  function renderTechs(techs) {
+    const c = document.getElementById('techList');
+    if (!techs.length) {
+      c.innerHTML = `
+        <div class="empty">
+          <div class="ei">🔍</div>
+          <h3>No technicians found for this category yet</h3>
+          <p>Try a broader category, or check back soon as more technicians join.</p>
+          <a href="/user-dashboard.html" class="btn btn-outline mt-2">Back to Dashboard</a>
+        </div>`;
+      return;
+    }
+    c.innerHTML = '<p class="text-light mb-2" style="font-size:.88rem">Found <strong>' + techs.length + '</strong> verified technician(s) matching your request:</p>' +
+    techs.map(t => `
+      <div class="tech-card">
+        <div class="tech-av">${initials(t.name)}</div>
+        <div class="tech-info">
+          <div class="tech-name">
+            ${t.name}
+            ${t.verified ? '<span class="badge badge-verified">Verified</span>' : ''}
+            ${t.isOnline ? '<span class="badge badge-online">Online</span>' : '<span class="badge badge-offline">Offline</span>'}
+          </div>
+          <div class="tech-meta">
+            📍 ${t.city} &nbsp;·&nbsp; ${t.experience} experience &nbsp;·&nbsp; ${ratingHtml(t.rating)}
+            &nbsp;·&nbsp; ${t.totalJobs} jobs done
+          </div>
+          <div class="skill-tags mb-2">${skillTagsHtml(t.skills)}</div>
+          ${t.bio ? '<div style="font-size:.82rem;color:var(--light);margin-bottom:.6rem">' + t.bio + '</div>' : ''}
+          <div class="flex-center gap-1 flex-wrap">
+            <a href="tel:${t.phone}" class="btn btn-success btn-sm">📞 Call ${t.phone}</a>
+            <span style="font-size:.78rem;color:var(--muted)">Active jobs: ${t.activeJobs}/${t.maxCapacity}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Technician Login — Reciverse</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="icon">🔧</span>Reci<span class="dot">verse</span></a>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <a href="/tech-register.html" class="btn btn-orange btn-sm">Register as Tech</a>
+  </div>
+</nav>
+
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">🔧 Reci<span class="dot">verse</span></div>
+    <h1 class="auth-title">Technician Login</h1>
+    <p class="auth-sub">Login to see nearby repair requests and manage your jobs.</p>
+    <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.82rem">
+      <strong style="color:var(--orange)">🌱 Demo accounts (password: demo123)</strong><br/>
+      ravi@demo.com · suresh@demo.com · anitha@demo.com · farhan@demo.com · kiran@demo.com
+    </div>
+
+    <div class="alert" id="alertBox"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="ravi@demo.com" required/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="demo123" required/>
+      </div>
+      <button type="submit" class="btn btn-orange btn-full" id="submitBtn">Login →</button>
+    </form>
+
+    <div class="auth-foot">
+      New technician? <a href="/tech-register.html" style="color:var(--orange)">Register here</a>
+      <br/>Customer? <a href="/user-login.html">User Login</a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script>
+  if (Auth.techToken()) window.location.href = '/tech-dashboard.html';
+
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn  = document.getElementById('submitBtn');
+    const alrt = document.getElementById('alertBox');
+    hideAlert(alrt);
+    btnLoading(btn, true);
+    try {
+      const res = await POST('/api/technicians/login', {
+        email:    document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+      });
+      if (res.error) { showAlert(alrt, res.error); btnLoading(btn, false); return; }
+      Auth.setTech(res.token, res.technician);
+      window.location.href = '/tech-dashboard.html';
+    } catch {
+      showAlert(alrt, 'Server error. Is the server running?');
+      btnLoading(btn, false);
+    }
+  });
+</script>
+</body>
+</html>

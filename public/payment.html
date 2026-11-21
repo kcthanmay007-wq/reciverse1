@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Payment — Reciverse</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="icon">🔧</span>Reci<span class="dot">verse</span></a>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <a href="/user-dashboard.html" class="btn btn-ghost btn-sm">← Dashboard</a>
+    <button class="btn btn-ghost btn-sm" onclick="Auth.logoutUser()">Logout</button>
+  </div>
+</nav>
+
+<div class="dash-shell">
+  <div class="dash-top">
+    <div>
+      <h2>💳 Pay for Repair Service</h2>
+      <p>Complete payment after service is delivered — safe, simple, transparent.</p>
+    </div>
+  </div>
+
+  <div class="dash-body" style="max-width:640px">
+
+    <!-- Loading state -->
+    <div id="loadingState" class="empty">
+      <div class="spinner"></div>
+      <p style="margin-top:1rem">Loading payment details…</p>
+    </div>
+
+    <!-- Payment form card -->
+    <div id="paymentCard" style="display:none">
+
+      <!-- Service summary -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="sh" style="margin-bottom:1rem">📋 Service Summary</div>
+        <div id="serviceSummary" style="font-size:.9rem;color:var(--text2);line-height:1.8"></div>
+      </div>
+
+      <!-- Amount card -->
+      <div style="background:var(--blue-lt);border:1.5px solid rgba(37,99,235,0.15);border-radius:var(--r2);padding:1.5rem;margin-bottom:1.25rem;text-align:center">
+        <div class="payment-sandbox-badge">🧪 SANDBOX / TEST MODE — No real money</div>
+        <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Total Amount</div>
+        <div id="displayAmount" style="font-size:2.5rem;font-weight:800;color:var(--blue);margin-bottom:.25rem">₹0</div>
+        <div style="font-size:.78rem;color:var(--muted)">Simulated payment for project demo — using Razorpay sandbox</div>
+      </div>
+
+      <!-- Payment method -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="sh" style="margin-bottom:1rem">💳 Choose Payment Method</div>
+
+        <div class="payment-methods">
+          <label class="payment-method-option" id="opt-upi">
+            <input type="radio" name="payMethod" value="upi" checked onchange="handleMethodChange(this)"/>
+            <span class="payment-method-icon">📱</span>
+            <div>
+              <div style="font-weight:600">UPI</div>
+              <div style="font-size:.78rem;color:var(--muted)">Google Pay, PhonePe, Paytm, any UPI app</div>
+            </div>
+          </label>
+
+          <label class="payment-method-option" id="opt-card">
+            <input type="radio" name="payMethod" value="card" onchange="handleMethodChange(this)"/>
+            <span class="payment-method-icon">💳</span>
+            <div>
+              <div style="font-weight:600">Credit / Debit Card</div>
+              <div style="font-size:.78rem;color:var(--muted)">Visa, Mastercard, RuPay</div>
+            </div>
+          </label>
+
+          <label class="payment-method-option" id="opt-netbanking">
+            <input type="radio" name="payMethod" value="netbanking" onchange="handleMethodChange(this)"/>
+            <span class="payment-method-icon">🏦</span>
+            <div>
+              <div style="font-weight:600">Net Banking</div>
+              <div style="font-size:.78rem;color:var(--muted)">SBI, HDFC, ICICI, Axis &amp; more</div>
+            </div>
+          </label>
+
+          <label class="payment-method-option" id="opt-cod">
+            <input type="radio" name="payMethod" value="cod" onchange="handleMethodChange(this)"/>
+            <span class="payment-method-icon">💵</span>
+            <div>
+              <div style="font-weight:600">Pay in Cash</div>
+              <div style="font-size:.78rem;color:var(--muted)">Pay directly to the technician on site</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- UPI ID input (shown for UPI) -->
+        <div id="upiInputArea" class="payment-upi-input">
+          <label style="font-size:.82rem;font-weight:600;color:var(--text2);display:block;margin-bottom:5px">Enter UPI ID (test)</label>
+          <input type="text" id="upiId" placeholder="yourname@paytm / test@upi" value="test@sandbox"/>
+        </div>
+
+        <!-- Card inputs (shown for card) -->
+        <div id="cardInputArea" style="display:none">
+          <div class="form-group">
+            <label>Card Number (test)</label>
+            <input type="text" id="cardNum" placeholder="4111 1111 1111 1111" maxlength="19" oninput="formatCard(this)"/>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Expiry (MM/YY)</label>
+              <input type="text" id="cardExp" placeholder="12/27" maxlength="5"/>
+            </div>
+            <div class="form-group">
+              <label>CVV (test: 123)</label>
+              <input type="text" id="cardCvv" placeholder="123" maxlength="3"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Name on Card</label>
+            <input type="text" id="cardName" placeholder="Your Name"/>
+          </div>
+        </div>
+
+        <!-- Net banking bank select -->
+        <div id="netbankingArea" style="display:none">
+          <div class="form-group">
+            <label>Select Bank</label>
+            <select id="bankSelect">
+              <option value="">— Select your bank —</option>
+              <option>State Bank of India</option>
+              <option>HDFC Bank</option>
+              <option>ICICI Bank</option>
+              <option>Axis Bank</option>
+              <option>Kotak Mahindra Bank</option>
+              <option>Bank of Baroda</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- COD notice -->
+        <div id="codNotice" style="display:none;background:var(--yellow-lt);border:1px solid rgba(217,119,6,0.2);border-radius:var(--r);padding:.85rem 1rem;font-size:.84rem;color:var(--yellow)">
+          💵 You'll pay cash directly to the technician after the repair is done. No online payment required.
+        </div>
+      </div>
+
+      <!-- Alert box -->
+      <div class="alert" id="payAlert"></div>
+
+      <!-- Submit -->
+      <button class="btn btn-primary btn-lg btn-full" id="payBtn" onclick="processPayment()">
+        🔒 Pay <span id="payBtnAmount"></span>
+      </button>
+
+      <p style="font-size:.75rem;color:var(--muted);text-align:center;margin-top:.75rem">
+        🧪 <strong>Sandbox / Test Mode</strong> — This is a simulated payment for project demonstration. No real money is processed. Using Razorpay test environment.
+      </p>
+    </div>
+
+    <!-- Payment success state -->
+    <div id="successCard" style="display:none">
+      <div class="card" style="text-align:center;padding:2.5rem 2rem">
+        <div class="payment-success">
+          <span class="payment-success-icon">✅</span>
+          <h3>Payment Successful!</h3>
+          <p>Your repair service payment has been recorded. The technician has been notified.</p>
+          <div class="payment-txn-id" id="txnDisplay"></div>
+          <div style="display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap">
+            <a href="/user-dashboard.html" class="btn btn-primary">Go to Dashboard</a>
+            <button class="btn btn-outline" onclick="downloadReceipt()">⬇ Download Receipt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script>
+if (!Auth.requireUser()) {}
+
+const params     = new URLSearchParams(location.search);
+const requestId  = params.get('requestId') || '';
+const techId     = params.get('techId')    || '';
+const techName   = decodeURIComponent(params.get('techName')   || 'Technician');
+const product    = decodeURIComponent(params.get('product')    || 'Repair Service');
+const amount     = parseInt(params.get('amount') || '0', 10);
+
+let currentRequest = null;
+
+// ── Init page ──────────────────────────────────────────────
+async function init() {
+  // Try to load request details
+  if (requestId) {
+    try {
+      const res = await GET('/api/requests/' + requestId, Auth.userToken());
+      if (res.request) currentRequest = res.request;
+    } catch {}
+  }
+
+  const displayAmt = amount > 0 ? amount : estimateAmount(product);
+  document.getElementById('displayAmount').textContent = '₹' + displayAmt;
+  document.getElementById('payBtnAmount').textContent  = '₹' + displayAmt;
+
+  // Build service summary
+  const req = currentRequest;
+  document.getElementById('serviceSummary').innerHTML = `
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:.4rem 1rem;align-items:start">
+      <span style="color:var(--muted);font-weight:600">Product:</span>
+      <span>${req ? (req.productName || req.productCategory) : product}</span>
+      <span style="color:var(--muted);font-weight:600">Issue:</span>
+      <span>${req ? req.faultDescription : '—'}</span>
+      <span style="color:var(--muted);font-weight:600">Technician:</span>
+      <span>${req ? (req.technicianName || techName) : techName}</span>
+      <span style="color:var(--muted);font-weight:600">Status:</span>
+      <span style="color:var(--green);font-weight:600">✅ Completed</span>
+    </div>
+  `;
+
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('paymentCard').style.display  = 'block';
+
+  // Highlight selected method
+  handleMethodChange(document.querySelector('input[name="payMethod"]:checked'));
+}
+
+function estimateAmount(cat) {
+  const base = {
+    'Washing Machine': 599, 'Refrigerator': 699, 'Air Conditioner': 799,
+    'Television': 499, 'Laptop/Computer': 899, 'Mobile Phone': 399,
+    'Microwave': 349, 'Water Purifier': 449, 'Geyser/Water Heater': 499,
+    'Fan/Motor': 299, 'Vehicle (2-Wheeler)': 699, 'Vehicle (4-Wheeler)': 1299,
+    'Printer/Scanner': 449, 'CCTV/Security System': 799, 'Inverter/UPS': 549,
+    'Other Appliance': 399
+  };
+  return base[cat] || 499;
+}
+
+// ── Method selector ────────────────────────────────────────
+function handleMethodChange(radio) {
+  if (!radio) return;
+  document.querySelectorAll('.payment-method-option').forEach(el => el.classList.remove('selected'));
+  if (radio.closest) radio.closest('.payment-method-option').classList.add('selected');
+
+  document.getElementById('upiInputArea').style.display     = 'none';
+  document.getElementById('cardInputArea').style.display    = 'none';
+  document.getElementById('netbankingArea').style.display   = 'none';
+  document.getElementById('codNotice').style.display        = 'none';
+
+  const v = radio.value;
+  if (v === 'upi')         document.getElementById('upiInputArea').style.display     = 'block';
+  if (v === 'card')        document.getElementById('cardInputArea').style.display    = 'block';
+  if (v === 'netbanking')  document.getElementById('netbankingArea').style.display   = 'block';
+  if (v === 'cod')         document.getElementById('codNotice').style.display        = 'block';
+}
+
+function formatCard(input) {
+  let v = input.value.replace(/\D/g,'').substring(0,16);
+  input.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+
+// ── Process Payment (Razorpay Sandbox simulation) ─────────
+async function processPayment() {
+  const btn    = document.getElementById('payBtn');
+  const alrt   = document.getElementById('payAlert');
+  const method = document.querySelector('input[name="payMethod"]:checked')?.value || 'upi';
+  const displayAmt = document.getElementById('displayAmount').textContent;
+
+  hideAlert(alrt);
+
+  // Validate fields
+  if (method === 'upi') {
+    const upi = document.getElementById('upiId').value.trim();
+    if (!upi || !upi.includes('@')) {
+      showAlert(alrt, 'Please enter a valid UPI ID (e.g. name@paytm)', 'err'); return;
+    }
+  }
+  if (method === 'card') {
+    const num  = document.getElementById('cardNum').value.replace(/\s/g,'');
+    const exp  = document.getElementById('cardExp').value.trim();
+    const cvv  = document.getElementById('cardCvv').value.trim();
+    const name = document.getElementById('cardName').value.trim();
+    if (num.length < 16) { showAlert(alrt, 'Enter a valid 16-digit card number.', 'err'); return; }
+    if (!exp.match(/^\d{2}\/\d{2}$/)) { showAlert(alrt, 'Enter expiry as MM/YY.', 'err'); return; }
+    if (cvv.length < 3)  { showAlert(alrt, 'Enter a 3-digit CVV.', 'err'); return; }
+    if (!name)           { showAlert(alrt, 'Enter the name on card.', 'err'); return; }
+  }
+  if (method === 'netbanking') {
+    if (!document.getElementById('bankSelect').value) {
+      showAlert(alrt, 'Please select your bank.', 'err'); return;
+    }
+  }
+
+  // Start loading
+  btnLoading(btn, true);
+  btn.innerHTML = '<span class="spinner"></span> Processing payment…';
+
+  // Simulate Razorpay sandbox delay (1.5 – 2.5s)
+  const delay = 1500 + Math.random() * 1000;
+  await new Promise(r => setTimeout(r, delay));
+
+  // Generate a mock Razorpay transaction ID
+  const txnId = 'rzp_sandbox_' + Math.random().toString(36).substring(2,10).toUpperCase() + Date.now().toString(36).toUpperCase();
+  const methodLabel = { upi:'UPI', card:'Card', netbanking:'Net Banking', cod:'Cash' }[method] || method;
+
+  // Record payment on server
+  try {
+    await POST('/api/payments', {
+      requestId,
+      techId,
+      amount: parseInt(displayAmt.replace('₹','')) || 499,
+      method: methodLabel,
+      txnId,
+      status: 'paid',
+      sandbox: true,
+      paidAt: new Date().toISOString()
+    }, Auth.userToken());
+  } catch {}
+
+  // Show success
+  btnLoading(btn, false);
+  document.getElementById('paymentCard').style.display = 'none';
+  document.getElementById('successCard').style.display = 'block';
+  document.getElementById('txnDisplay').innerHTML =
+    `Transaction ID: <strong>${txnId}</strong><br>Method: ${methodLabel} · Amount: ${displayAmt}`;
+
+  // Store receipt in localStorage for download
+  localStorage.setItem('rv_last_payment', JSON.stringify({
+    txnId, method: methodLabel,
+    amount: displayAmt, product,
+    techName, paidAt: new Date().toLocaleString('en-IN')
+  }));
+}
+
+function downloadReceipt() {
+  const p = JSON.parse(localStorage.getItem('rv_last_payment') || '{}');
+  const content = `RECIVERSE — PAYMENT RECEIPT
+================================
+Transaction ID : ${p.txnId || '—'}
+Date & Time    : ${p.paidAt || '—'}
+Amount Paid    : ${p.amount || '—'}
+Payment Method : ${p.method || '—'}
+Product        : ${p.product || '—'}
+Technician     : ${p.techName || '—'}
+================================
+[SANDBOX/TEST — Not a real receipt]
+`;
+  const blob = new Blob([content], { type:'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'reciverse_receipt_' + (p.txnId || 'test') + '.txt';
+  a.click();
+}
+
+init();
+</script>
+</body>
+</html>

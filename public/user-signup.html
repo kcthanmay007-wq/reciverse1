@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sign Up — Reciverse</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="icon">🔧</span>Reci<span class="dot">verse</span></a>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <a href="/user-login.html" class="btn btn-ghost btn-sm">Already have an account? Login</a>
+  </div>
+</nav>
+
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">🔧 Reci<span class="dot">verse</span></div>
+    <h1 class="auth-title">Create your account</h1>
+    <p class="auth-sub">Sign up once — find trusted technicians anytime.</p>
+
+    <div class="alert" id="alertBox"></div>
+
+    <form id="signupForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="name" placeholder="Priya Sharma" required/>
+        </div>
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" id="phone" placeholder="9876543210" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" id="email" placeholder="priya@example.com" required/>
+      </div>
+      <div class="form-group">
+        <label>City *</label>
+        <input type="text" id="city" placeholder="Hyderabad" required/>
+      </div>
+      <div class="form-group">
+        <label>Password *</label>
+        <input type="password" id="password" placeholder="Min 6 characters" required minlength="6"/>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+        Create Account →
+      </button>
+    </form>
+
+    <div class="auth-foot">
+      Already registered? <a href="/user-login.html">Login here</a>
+      <br/><br/>
+      Are you a technician? <a href="/tech-register.html" style="color:var(--orange)">Register as Technician</a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script>
+  // Redirect if already logged in
+  if (Auth.userToken()) window.location.href = '/user-dashboard.html';
+
+  document.getElementById('signupForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn   = document.getElementById('submitBtn');
+    const alert = document.getElementById('alertBox');
+    hideAlert(alert);
+    btnLoading(btn, true);
+
+    const data = {
+      name:     document.getElementById('name').value.trim(),
+      phone:    document.getElementById('phone').value.trim(),
+      email:    document.getElementById('email').value.trim(),
+      city:     document.getElementById('city').value.trim(),
+      password: document.getElementById('password').value
+    };
+
+    try {
+      const res = await POST('/api/users/register', data);
+      if (res.error) { showAlert(alert, res.error); btnLoading(btn, false); return; }
+      Auth.setUser(res.token, res.user);
+      window.location.href = '/user-dashboard.html';
+    } catch {
+      showAlert(alert, 'Server error. Is the server running?');
+      btnLoading(btn, false);
+    }
+  });
+</script>
+</body>
+</html>

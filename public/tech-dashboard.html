@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Technician Dashboard — Reciverse</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="icon">🔧</span>Reci<span class="dot">verse</span></a>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <div id="onlineToggle" class="online-toggle off" onclick="toggleOnline()" title="Toggle your availability for new jobs">
+      <div class="toggle-dot off" id="toggleDot"></div>
+      <span id="toggleLabel">Offline</span>
+    </div>
+    <a href="/tech-profile.html" style="font-size:.85rem;color:var(--orange);font-weight:600;padding:6px 10px;text-decoration:none">My Profile</a>
+    <span id="techNameDisplay" style="font-size:.85rem;color:var(--light)"></span>
+    <button class="btn btn-ghost btn-sm" onclick="Auth.logoutTech()">Logout</button>
+  </div>
+</nav>
+
+<div class="dash-shell">
+  <div class="dash-top">
+    <div>
+      <h2 id="welcomeMsg">Welcome!</h2>
+      <p>Manage your jobs, track earnings &amp; update your availability</p>
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <span class="badge badge-verified">Verified Technician</span>
+      <a href="/tech-profile.html" class="btn btn-outline btn-sm">Manage Skills</a>
+    </div>
+  </div>
+
+  <div class="dash-body">
+    <!-- KPIs -->
+    <div class="kpi-row" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+      <div class="kpi"><div class="kpi-icon orange">⚡</div><div><div class="kpi-val" id="kpiActive">—</div><div class="kpi-lbl">Active Jobs</div></div></div>
+      <div class="kpi"><div class="kpi-icon green">🏁</div><div><div class="kpi-val" id="kpiDone">—</div><div class="kpi-lbl">Completed</div></div></div>
+      <div class="kpi"><div class="kpi-icon blue">⭐</div><div><div class="kpi-val" id="kpiRating">—</div><div class="kpi-lbl">Rating</div></div></div>
+      <div class="kpi"><div class="kpi-icon purple">🔋</div><div><div class="kpi-val" id="kpiCapacity">—</div><div class="kpi-lbl">Capacity Left</div></div></div>
+    </div>
+
+    <!-- Skills strip -->
+    <div id="techSkillStrip" style="margin-bottom:1.5rem"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('available',this)">Available Requests</button>
+      <button class="tab" onclick="showTab('myjobs',this)">My Active Jobs</button>
+      <button class="tab" onclick="showTab('completed',this)">Completed</button>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert" id="alertBox"></div>
+
+    <div id="tabContent">
+      <div class="empty"><div class="spinner"></div><p style="margin-top:1rem">Loading your dashboard...</p></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script>
+  if (!Auth.requireTech()) {}
+
+  let techData   = null;
+  let myJobs     = [];
+  let available  = [];
+  let currentTab = 'available';
+
+  async function loadDashboard() {
+    const cached = Auth.tech();
+    techData = cached;
+    updateHeader(cached);
+
+    try {
+      techData = await GET('/api/technicians/me', Auth.techToken());
+      if (techData && !techData.error) {
+        Auth.setTech(Auth.techToken(), techData);
+        updateHeader(techData);
+      }
+    } catch {}
+
+    await refreshData();
+  }
+
+  function updateHeader(t) {
+    if (!t) return;
+    document.getElementById('welcomeMsg').textContent = 'Welcome, ' + t.name + '!';
+    document.getElementById('techNameDisplay').textContent = t.name;
+    document.getElementById('kpiActive').textContent   = t.activeJobs ?? '0';
+    document.getElementById('kpiDone').textContent     = t.totalJobs ?? '0';
+    document.getElementById('kpiRating').textContent   = t.rating ? Number(t.rating).toFixed(1) : 'New';
+    document.getElementById('kpiCapacity').textContent = t.maxCapacity && t.activeJobs !== undefined
+      ? (t.maxCapacity - t.activeJobs) + '/' + t.maxCapacity : '10/10';
+
+    const tog = document.getElementById('onlineToggle');
+    const dot = document.getElementById('toggleDot');
+    const lbl = document.getElementById('toggleLabel');
+    if (t.isOnline) {
+      tog.className = 'online-toggle on';
+      dot.className = 'toggle-dot on';
+      lbl.textContent = 'Online';
+    } else {
+      tog.className = 'online-toggle off';
+      dot.className = 'toggle-dot off';
+      lbl.textContent = 'Offline';
+    }
+
+    const strip = document.getElementById('techSkillStrip');
+    const skills = t.skills || [];
+    strip.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+        <div class="skill-tags">
+          ${skills.map(s => {
+            const isVer = t.skillDetails && t.skillDetails[s]?.verified;
+            return '<span class="skill-tag">' + s + (isVer ? ' ✓' : '') + '</span>';
+          }).join('')}
+        </div>
+        <a href="/tech-profile.html" style="font-size:.78rem;color:var(--blue);font-weight:600">Edit Skills</a>
+      </div>
+    `;
+  }
+
+  async function refreshData() {
+    try {
+      [available, myJobs] = await Promise.all([
+        GET('/api/technicians/available-requests', Auth.techToken()),
+        GET('/api/technicians/my-jobs',           Auth.techToken())
+      ]);
+      if (!Array.isArray(available)) available = [];
+      if (!Array.isArray(myJobs)) myJobs = [];
+    } catch {
+      available = [];
+      myJobs = [];
+    }
+    renderTab();
+  }
+
+  function showTab(tab, btn) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    renderTab();
+  }
+
+  function renderTab() {
+    const c    = document.getElementById('tabContent');
+    const alrt = document.getElementById('alertBox');
+    hideAlert(alrt);
+
+    if (currentTab === 'available') {
+      if (!techData?.isOnline) {
+        c.innerHTML = `
+          <div class="empty">
+            <div class="ei">⚫</div>
+            <h3>You are currently offline</h3>
+            <p>Toggle yourself <strong>Online</strong> (top right) to start receiving repair requests matched to your skills.</p>
+            <button class="btn btn-success mt-2" onclick="toggleOnline()">Go Online Now</button>
+          </div>`;
+        return;
+      }
+      if (!available.length) {
+        c.innerHTML = `<div class="empty"><div class="ei">🔍</div><h3>No matching requests right now</h3><p>New service requests matching your skills will appear here automatically.</p></div>`;
+        return;
+      }
+      c.innerHTML = '<p class="text-light mb-2" style="font-size:.87rem">' + available.length + ' request(s) matching your skills:</p>' +
+        available.map(r => {
+          const isSuggested = r.suggestedTechnicianId === techData?.id;
+          const passN = r.passNumber || 1;
+          return `
+          <div class="req-card" style="${isSuggested ? 'border-color:var(--blue);background:var(--blue-lt)' : ''}">
+            <div class="req-head">
+              <div>
+                <div class="req-product">📦 ${r.productName || r.productCategory}</div>
+                <div style="font-size:.74rem;color:var(--muted)">${r.productCategory} · ${fmtDate(r.createdAt)}</div>
+              </div>
+              <div style="display:flex;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
+                ${isSuggested ? '<span class="badge badge-accepted">Best Match</span>' : ''}
+                <span class="badge" style="background:var(--bg2);color:var(--muted);border:1px solid var(--border)">Pass ${passN}</span>
+                ${r.suggestedTechScore ? '<span style="font-size:.72rem;color:var(--muted)">Score: ' + r.suggestedTechScore + '</span>' : ''}
+              </div>
+            </div>
+            <div class="req-fault">${r.faultDescription}</div>
+            <div class="req-meta">
+              ${r.city ? '<span>📍 ' + r.city + '</span>' : ''}
+              ${r.urgency==='urgent' ? '<span style="color:var(--orange)">Urgent</span>' : '<span>Normal</span>'}
+            </div>
+            <div class="mt-2" style="display:flex;gap:.5rem">
+              <button class="btn btn-success btn-sm" onclick="acceptJob('${r.id}',this)">Accept Job</button>
+              <button class="btn btn-outline btn-sm" onclick="declineJob('${r.id}',this)" style="color:var(--red);border-color:rgba(220,38,38,0.3)">Decline</button>
+            </div>
+          </div>`;
+        }).join('');
+      return;
+    }
+
+    if (currentTab === 'myjobs') {
+      const active = myJobs.filter(j=>j.status==='accepted' || j.status==='pending_completion');
+      if (!active.length) {
+        c.innerHTML = `<div class="empty"><div class="ei">💼</div><h3>No active jobs right now</h3><p>Accept requests from the "Available Requests" tab to get started.</p></div>`;
+        return;
+      }
+      c.innerHTML = active.map(j => {
+        const isPendingApproval = j.status === 'pending_completion';
+        return `
+        <div class="req-card">
+          <div class="req-head">
+            <div>
+              <div class="req-product">🛠️ ${j.productName || j.productCategory}</div>
+              <div style="font-size:.74rem;color:var(--muted)">Accepted: ${fmtDate(j.acceptedAt)}</div>
+            </div>
+            ${statusBadge(j.status)}
+          </div>
+          <div class="req-fault">${j.faultDescription}</div>
+
+          <div style="background:var(--blue-lt);border:1px solid rgba(37,99,235,0.2);border-radius:8px;padding:.75rem 1rem;margin-bottom:.7rem;font-size:.85rem">
+            <div><strong style="color:var(--blue)">Customer:</strong> ${j.userName || 'Customer'} ${j.city ? '&nbsp;·&nbsp;📍 ' + j.city : ''}</div>
+            ${j.userPhone ? '<div style="margin-top:.25rem"><strong style="color:var(--green)">Phone:</strong> <a href="tel:' + j.userPhone + '" style="color:var(--green);font-weight:600">' + j.userPhone + '</a></div>' : ''}
+          </div>
+
+          ${isPendingApproval ? `
+            <div style="background:var(--yellow-lt);border:1.5px solid rgba(217,119,6,0.3);border-radius:8px;padding:.8rem 1rem;margin-bottom:.75rem">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
+                <strong style="color:var(--yellow);font-size:.88rem">⏳ Awaiting Customer Approval</strong>
+                <span style="font-size:.8rem;background:white;padding:3px 10px;border-radius:6px;border:1px solid var(--border)">
+                  Customer PIN: <strong style="color:var(--blue);font-size:.92rem;letter-spacing:1px">${j.completionOtp || '—'}</strong>
+                </span>
+              </div>
+              <div style="font-size:.8rem;color:var(--text2);margin-top:.35rem">
+                You submitted work completion. Once the customer verifies and approves in their dashboard, this job will finalize automatically.
+              </div>
+            </div>` : ''}
+
+          <div class="req-meta">
+            ${j.city ? '<span>📍 ' + j.city + '</span>' : ''}
+            ${j.urgency==='urgent' ? '<span style="color:var(--orange)">Urgent</span>' : ''}
+          </div>
+          <div class="mt-2" style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+            ${!isPendingApproval ? `
+              <button class="btn btn-primary btn-sm" onclick="completeJob('${j.id}',this)">
+                ✓ Submit Work as Completed
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="releaseJob('${j.id}',this)" style="color:var(--red);border-color:rgba(220,38,38,0.3)">
+                Release Job (Mistake)
+              </button>` : `
+              <span style="font-size:.8rem;color:var(--muted)">Waiting for customer sign-off</span>`}
+          </div>
+        </div>`;
+      }).join('');
+      return;
+    }
+
+    if (currentTab === 'completed') {
+      const done = myJobs.filter(j=>j.status==='completed');
+      if (!done.length) {
+        c.innerHTML = `<div class="empty"><div class="ei">🏁</div><h3>No completed jobs yet</h3><p>Your repair service history will appear here once you finish your active jobs.</p></div>`;
+        return;
+      }
+      c.innerHTML = done.map(j => `
+        <div class="req-card">
+          <div class="req-head">
+            <div>
+              <div class="req-product">✅ ${j.productName || j.productCategory}</div>
+              <div style="font-size:.74rem;color:var(--muted)">Completed: ${fmtDate(j.completedAt)}</div>
+            </div>
+            ${statusBadge(j.status)}
+          </div>
+          <div class="req-fault">${j.faultDescription}</div>
+          <div class="req-meta">
+            ${j.city ? '<span>📍 ' + j.city + '</span>' : ''}
+            ${j.userName ? '<span>👤 ' + j.userName + '</span>' : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  async function toggleOnline() {
+    try {
+      const res = await PUT('/api/technicians/toggle-online', {}, Auth.techToken());
+      if (res.isOnline !== undefined) {
+        techData.isOnline = res.isOnline;
+        updateHeader(techData);
+        renderTab();
+      }
+    } catch { alert('Could not toggle online status. Check server connection.'); }
+  }
+
+  async function acceptJob(id, btn) {
+    const alrt = document.getElementById('alertBox');
+    hideAlert(alrt);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Accepting...';
+    btn.disabled  = true;
+    try {
+      const res = await PUT('/api/technicians/requests/' + id + '/accept', {}, Auth.techToken());
+      if (res.error) { showAlert(alrt, res.error); btn.innerHTML = orig; btn.disabled = false; return; }
+      showAlert(alrt, 'Job accepted! Check "My Active Jobs" for customer contact details.', 'ok');
+      if (techData) { techData.activeJobs = (techData.activeJobs || 0) + 1; updateHeader(techData); }
+      await refreshData();
+      showTab('myjobs', document.querySelectorAll('.tab')[1]);
+    } catch {
+      showAlert(alrt, 'Server error.');
+      btn.innerHTML = orig; btn.disabled = false;
+    }
+  }
+
+  async function completeJob(id, btn) {
+    const alrt = document.getElementById('alertBox');
+    hideAlert(alrt);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Submitting...';
+    btn.disabled  = true;
+    try {
+      const res = await PUT('/api/technicians/requests/' + id + '/complete', {}, Auth.techToken());
+      if (res.error) { showAlert(alrt, res.error); btn.innerHTML = orig; btn.disabled = false; return; }
+      showAlert(alrt, `✅ Work completion submitted! Verification PIN: ${res.completionOtp || '—'}. Awaiting customer approval.`, 'ok');
+      await refreshData();
+    } catch {
+      showAlert(alrt, 'Server error.');
+      btn.innerHTML = orig; btn.disabled = false;
+    }
+  }
+
+  async function releaseJob(id, btn) {
+    const reason = prompt('Release this active job? You can enter a reason (e.g. "Accepted by mistake" or "Schedule conflict"):', 'Accepted by mistake');
+    if (!reason) return;
+    const alrt = document.getElementById('alertBox');
+    hideAlert(alrt);
+    btn.disabled = true;
+    try {
+      const res = await PUT('/api/technicians/requests/' + id + '/release', { reason }, Auth.techToken());
+      if (res.error) { showAlert(alrt, res.error); btn.disabled = false; return; }
+      showAlert(alrt, 'Job released and returned to the matching pool for other technicians.', 'ok');
+      if (techData && techData.activeJobs > 0) {
+        techData.activeJobs--;
+        updateHeader(techData);
+      }
+      await refreshData();
+    } catch {
+      showAlert(alrt, 'Server error releasing job.');
+      btn.disabled = false;
+    }
+  }
+
+  async function declineJob(id, btn) {
+    const alrt = document.getElementById('alertBox');
+    hideAlert(alrt);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '...';
+    btn.disabled  = true;
+    try {
+      const res = await PUT('/api/technicians/requests/' + id + '/decline', {}, Auth.techToken());
+      if (res.error) { showAlert(alrt, res.error); btn.innerHTML = orig; btn.disabled = false; return; }
+      showAlert(alrt, 'Request declined. Auto-assigning to the next best technician.', 'ok');
+      await refreshData();
+    } catch {
+      showAlert(alrt, 'Server error.');
+      btn.innerHTML = orig; btn.disabled = false;
+    }
+  }
+
+  loadDashboard();
+  setInterval(refreshData, 25000);
+</script>
+</body>
+</html>

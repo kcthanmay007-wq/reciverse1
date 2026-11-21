@@ -1,0 +1,16 @@
+[
+  {
+    "id": "f8840bb6-33a0-446f-90c3-ba68cbd97b97",
+    "requestId": "c53fc57a-21b7-42fe-a99c-2c439277b4e8",
+    "userId": "8a23cd55-2027-44e2-bdfc-6b0ec36df113",
+    "technicianId": "baa87819-6c8d-437e-a8f3-5f9a9d715045",
+    "rating": 5,
+    "comment": "Excellent work, fast and clean!",
+    "tags": [
+      "Expert",
+      "On-time"
+    ],
+    "productCategory": "Washing Machine",
+    "createdAt": "2026-10-15T12:51:14.677Z"
+  }
+]

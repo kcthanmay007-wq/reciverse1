@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Login — Reciverse</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="icon">🔧</span>Reci<span class="dot">verse</span></a>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <a href="/user-signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+  </div>
+</nav>
+
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">🔧 Reci<span class="dot">verse</span></div>
+    <h1 class="auth-title">Welcome back</h1>
+    <p class="auth-sub">Login to find technicians and track your repair requests.</p>
+
+    <div class="alert" id="alertBox"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="priya@example.com" required/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Your password" required/>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+        Login →
+      </button>
+    </form>
+
+    <div class="auth-foot">
+      New here? <a href="/user-signup.html">Create an account</a>
+      <br/><br/>
+      Technician? <a href="/tech-login.html" style="color:var(--orange)">Technician Login</a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script>
+  if (Auth.userToken()) window.location.href = '/user-dashboard.html';
+
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn   = document.getElementById('submitBtn');
+    const alert = document.getElementById('alertBox');
+    hideAlert(alert);
+    btnLoading(btn, true);
+
+    try {
+      const res = await POST('/api/users/login', {
+        email:    document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+      });
+      if (res.error) { showAlert(alert, res.error); btnLoading(btn, false); return; }
+      Auth.setUser(res.token, res.user);
+      window.location.href = '/user-dashboard.html';
+    } catch {
+      showAlert(alert, 'Server error. Is the server running?');
+      btnLoading(btn, false);
+    }
+  });
+</script>
+</body>
+</html>

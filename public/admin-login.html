@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login — Reciverse</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .login-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      background: var(--bg);
+    }
+
+    .login-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r2);
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow);
+    }
+
+    .login-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 2rem;
+      justify-content: center;
+    }
+    .login-brand .dot { color: var(--blue); }
+
+    .admin-badge {
+      background: rgba(249,115,22,0.12);
+      color: var(--orange);
+      border: 1px solid rgba(249,115,22,0.3);
+      border-radius: 100px;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-bottom: 1.25rem;
+    }
+
+    .login-title {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    .login-sub {
+      color: var(--light);
+      font-size: 0.92rem;
+      margin-bottom: 2rem;
+    }
+
+    .field-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--light);
+      margin-bottom: 0.45rem;
+      letter-spacing: .03em;
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      transition: border-color 0.15s;
+    }
+    .field-input::placeholder { color: var(--muted); }
+    .field-input:focus {
+      outline: none;
+      border-color: var(--orange);
+    }
+
+    .login-btn {
+      width: 100%;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      padding: 0.85rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 0.5rem;
+      letter-spacing: .02em;
+    }
+    .login-btn:hover { background: #ea6a05; }
+    .login-btn:active { transform: scale(0.98); }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .error-banner {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--r);
+      padding: 0.75rem 1rem;
+      color: var(--red);
+      font-size: 0.88rem;
+      margin-bottom: 1.25rem;
+      display: none;
+    }
+    .error-banner.show { display: block; }
+
+    .demo-hint {
+      margin-top: 1.5rem;
+      padding: 0.9rem 1rem;
+      background: rgba(59,130,246,0.07);
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: var(--r);
+      font-size: 0.85rem;
+      color: var(--light);
+      text-align: center;
+    }
+    .demo-hint strong { color: var(--blue); }
+    .demo-hint code {
+      background: rgba(59,130,246,0.12);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: monospace;
+      color: var(--blue);
+      font-size: 0.85rem;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 1.25rem;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="login-card">
+
+      <!-- Brand -->
+      <div class="login-brand">
+        🔧 Reci<span class="dot">verse</span>
+      </div>
+
+      <div style="text-align:center">
+        <div class="admin-badge">⚙️ Admin Portal</div>
+      </div>
+      <h1 class="login-title" style="text-align:center">Admin Login</h1>
+      <p class="login-sub" style="text-align:center">Sign in to access the control panel</p>
+
+      <!-- Error -->
+      <div class="error-banner" id="errorBanner">Invalid credentials. Please try again.</div>
+
+      <!-- Form -->
+      <div class="field-group">
+        <label class="field-label" for="emailInput">Email Address</label>
+        <input class="field-input" type="email" id="emailInput" placeholder="admin@reciverse.com" autocomplete="username" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="pwInput">Password</label>
+        <input class="field-input" type="password" id="pwInput" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+
+      <button class="login-btn" id="loginBtn">Sign In to Admin Panel</button>
+
+      <hr class="divider" />
+
+      <!-- Demo hint -->
+      <div class="demo-hint">
+        🔑 <strong>Demo credentials</strong><br />
+        Email: <code>admin@reciverse.com</code><br />
+        Password: <code>admin123</code>
+      </div>
+
+      <a href="/" class="back-link">← Back to Reciverse</a>
+
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+  (() => {
+    // If already logged in, skip
+    if (localStorage.getItem('reciverse_admin_token')) {
+      window.location.href = 'admin-dashboard.html';
+      return;
+    }
+
+    const loginBtn   = document.getElementById('loginBtn');
+    const emailInput = document.getElementById('emailInput');
+    const pwInput    = document.getElementById('pwInput');
+    const errorBanner = document.getElementById('errorBanner');
+
+    function showError(msg) {
+      errorBanner.textContent = msg;
+      errorBanner.classList.add('show');
+    }
+    function hideError() {
+      errorBanner.classList.remove('show');
+    }
+
+    async function doLogin() {
+      hideError();
+      const email    = emailInput.value.trim();
+      const password = pwInput.value;
+
+      if (!email || !password) {
+        showError('Please enter both email and password.');
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Signing in…';
+
+      try {
+        const res = await POST('/api/admin/login', { email, password });
+
+        if (res.token) {
+          localStorage.setItem('reciverse_admin_token', res.token);
+          window.location.href = 'admin-dashboard.html';
+        } else {
+          showError(res.message || res.error || 'Invalid credentials.');
+        }
+      } catch {
+        showError('Network error. Please try again.');
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Sign In to Admin Panel';
+      }
+    }
+
+    loginBtn.addEventListener('click', doLogin);
+    [emailInput, pwInput].forEach(el =>
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); })
+    );
+  })();
+  </script>
+</body>
+</html>

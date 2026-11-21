@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>My Dashboard — Reciverse</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo"><span class="icon">🔧</span>Reci<span class="dot">verse</span></a>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <a href="/raise-request.html" class="btn btn-primary btn-sm">+ New Request</a>
+    <a href="/user-profile.html" class="hide-sm" style="font-size:.85rem;color:var(--light);padding:6px 10px;text-decoration:none">Profile</a>
+    <span id="userNameDisplay" style="font-size:.85rem;color:var(--light)"></span>
+    <button class="btn btn-ghost btn-sm" onclick="Auth.logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="dash-shell">
+  <div class="dash-top">
+    <div>
+      <h2 id="welcomeMsg">Welcome back!</h2>
+      <p>Track your repair requests, technician assignments &amp; payments</p>
+    </div>
+    <a href="/raise-request.html" class="btn btn-primary">+ New Request</a>
+  </div>
+
+  <div class="dash-body">
+    <!-- KPIs -->
+    <div class="kpi-row" id="kpiRow">
+      <div class="kpi"><div class="kpi-icon blue">📋</div><div><div class="kpi-val" id="kpiTotal">0</div><div class="kpi-lbl">Total Requests</div></div></div>
+      <div class="kpi"><div class="kpi-icon orange">⏳</div><div><div class="kpi-val" id="kpiPending">0</div><div class="kpi-lbl">Pending Match</div></div></div>
+      <div class="kpi"><div class="kpi-icon green">✅</div><div><div class="kpi-val" id="kpiAccepted">0</div><div class="kpi-lbl">In Progress</div></div></div>
+      <div class="kpi"><div class="kpi-icon purple">🏁</div><div><div class="kpi-val" id="kpiDone">0</div><div class="kpi-lbl">Completed</div></div></div>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert" id="dashAlert"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('active',this)">Active</button>
+      <button class="tab" onclick="showTab('completed',this)">Completed</button>
+      <button class="tab" onclick="showTab('all',this)">All Requests</button>
+    </div>
+
+    <div id="requestsContainer">
+      <div class="empty"><div class="spinner"></div><p style="margin-top:1rem">Loading your requests...</p></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script>
+  if (!Auth.requireUser()) {}
+
+  let allRequests = [];
+  let currentTab  = 'active';
+
+  async function loadDashboard() {
+    const user = Auth.user();
+    if (user) {
+      document.getElementById('welcomeMsg').textContent = 'Welcome, ' + user.name + '!';
+      document.getElementById('userNameDisplay').textContent = user.name;
+    }
+
+    try {
+      allRequests = await GET('/api/requests', Auth.userToken());
+      if (!Array.isArray(allRequests)) allRequests = [];
+    } catch {
+      allRequests = [];
+    }
+
+    updateKPIs();
+    renderRequests();
+  }
+
+  function updateKPIs() {
+    document.getElementById('kpiTotal').textContent    = allRequests.length;
+    document.getElementById('kpiPending').textContent  = allRequests.filter(r=>r.status==='pending').length;
+    document.getElementById('kpiAccepted').textContent = allRequests.filter(r=>r.status==='accepted').length;
+    document.getElementById('kpiDone').textContent     = allRequests.filter(r=>r.status==='completed').length;
+  }
+
+  function showTab(tab, btn) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    renderRequests();
+  }
+
+  function renderRequests() {
+    const c = document.getElementById('requestsContainer');
+    let list = allRequests;
+    if (currentTab === 'active')    list = allRequests.filter(r=>r.status!=='completed' && r.status!=='cancelled');
+    if (currentTab === 'completed') list = allRequests.filter(r=>r.status==='completed');
+
+    if (!list.length) {
+      c.innerHTML = `
+        <div class="empty">
+          <div class="ei">🔧</div>
+          <h3>No requests in this view</h3>
+          <p>Post a repair request for any home appliance, computer, electronics, or vehicle.</p>
+          <a href="/raise-request.html" class="btn btn-primary mt-2">+ Raise a Request</a>
+        </div>`;
+      return;
+    }
+
+    c.innerHTML = list.map(r => {
+      const isPending   = r.status === 'pending';
+      const isAccepted  = r.status === 'accepted';
+      const isCompleted = r.status === 'completed';
+      const isPaid      = r.paymentStatus === 'paid';
+
+      return `
+      <div class="req-card">
+        <div class="req-head">
+          <div>
+            <div class="req-product">🛠️ ${r.productName || r.productCategory}</div>
+            <div style="font-size:.75rem;color:var(--muted)">Category: ${r.productCategory} · ${fmtDate(r.createdAt)}</div>
+          </div>
+          <div style="display:flex;gap:.4rem;align-items:center">
+            ${statusBadge(r.status)}
+            ${isPaid ? '<span class="badge" style="background:var(--green-lt);color:var(--green);border:1px solid rgba(22,163,74,0.2)">💳 Paid</span>' : ''}
+          </div>
+        </div>
+
+        <div class="req-fault">${r.faultDescription}</div>
+
+        <!-- Matching Engine Status (pending) -->
+        ${isPending ? `
+          <div style="background:var(--orange-lt);border:1px solid rgba(234,88,12,0.2);border-radius:8px;padding:.75rem 1rem;margin-bottom:.8rem;font-size:.85rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+              <div>
+                <strong style="color:var(--orange)">Smart Matching:</strong>
+                <span style="color:var(--text2);margin-left:4px">${r.passLabel || 'Searching technicians...'}</span>
+              </div>
+              ${r.urgency === 'urgent'
+                ? '<span style="font-size:.72rem;background:var(--red-lt);color:var(--red);padding:2px 7px;border-radius:50px;font-weight:700">URGENT</span>'
+                : '<span style="font-size:.72rem;background:var(--blue-lt);color:var(--blue);padding:2px 7px;border-radius:50px">Normal</span>'
+              }
+            </div>
+            ${r.suggestedTechnicianName ? `
+              <div style="font-size:.78rem;color:var(--muted);margin-top:.35rem">
+                Best match: <strong style="color:var(--text2)">${r.suggestedTechnicianName}</strong>
+                ${r.suggestedTechScore ? '<span style="color:var(--blue)">(Score: ' + r.suggestedTechScore + ' pts)</span>' : ''}
+              </div>` : ''}
+          </div>` : ''}
+
+        <!-- Assigned Technician (accepted / pending_completion / completed) -->
+        ${r.technicianName ? `
+          <div style="background:var(--green-lt);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:.75rem 1rem;margin-bottom:.8rem;font-size:.85rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+              <div>
+                <strong style="color:var(--green)">Assigned Partner:</strong>
+                <span style="font-weight:600;color:var(--text);margin-left:4px">${r.technicianName}</span>
+                ${isAccepted ? '<span style="font-size:.72rem;background:var(--blue-lt);color:var(--blue);padding:2px 7px;border-radius:50px;margin-left:6px">Active Partner</span>' : ''}
+              </div>
+              <div style="display:flex;gap:.5rem;align-items:center">
+                ${r.technicianPhone ? `
+                  <a href="tel:${r.technicianPhone}" class="btn btn-success btn-sm">📞 Call Partner</a>` : ''}
+                ${isAccepted ? `
+                  <button class="btn btn-outline btn-sm" onclick="rejectTechnician('${r.id}', '${r.technicianName}')" style="color:var(--red);border-color:rgba(220,38,38,0.3)">
+                    ✕ Change Partner
+                  </button>` : ''}
+              </div>
+            </div>
+          </div>` : ''}
+
+        <!-- 🤝 MUTUAL ASSURANCE: Technician submitted work for Customer approval -->
+        ${r.status === 'pending_completion' ? `
+          <div style="background:var(--yellow-lt);border:1.5px solid rgba(217,119,6,0.3);border-radius:10px;padding:1rem;margin-bottom:.85rem">
+            <div style="display:flex;align-items:center;gap:8px;font-weight:700;color:var(--yellow);font-size:.92rem">
+              <span>🔔 Mutual Work Completion Assurance</span>
+            </div>
+            <p style="font-size:.84rem;color:var(--text2);margin-top:.35rem;line-height:1.5">
+              Technician <strong>${r.technicianName}</strong> has finished the service work. To protect your satisfaction, the job is not marked done until you inspect and approve it.
+            </p>
+            ${r.completionOtp ? `
+              <div style="font-size:.8rem;color:var(--muted);margin-top:.4rem">
+                Verification PIN: <strong style="color:var(--blue);font-size:.9rem;letter-spacing:1px">${r.completionOtp}</strong> (Shared by technician)
+              </div>` : ''}
+            <div style="display:flex;gap:.6rem;margin-top:.85rem;flex-wrap:wrap">
+              <button class="btn btn-success btn-sm" onclick="confirmCompletion('${r.id}', '${r.completionOtp||''}', this)">
+                ✅ Confirm & Approve Work
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="disputeCompletion('${r.id}', this)" style="color:var(--red);border-color:rgba(220,38,38,0.3)">
+                ⚠️ Work Incomplete / Report Issue
+              </button>
+            </div>
+          </div>` : ''}
+
+        <div class="req-meta">
+          <span>📦 ${r.productCategory}</span>
+          ${r.city ? `<span>📍 ${r.city}</span>` : ''}
+          ${r.urgency==='urgent' ? '<span style="color:var(--orange)">Urgent</span>' : '<span>Normal</span>'}
+        </div>
+
+        <div class="mt-2" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+          <a href="/raise-request.html?view=${r.id}" class="btn btn-outline btn-sm">View Match Details</a>
+
+          ${isPending ? `
+            <button class="btn btn-primary btn-sm" onclick="autoAssignNow('${r.id}',this)">
+              Auto-Assign Best Tech
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="cancelRequest('${r.id}',this)" style="color:var(--red)">
+              Cancel
+            </button>` : ''}
+
+          ${isAccepted ? `
+            <button class="btn btn-ghost btn-sm" onclick="cancelRequest('${r.id}',this)" style="color:var(--red)">
+              Cancel Request
+            </button>` : ''}
+
+          ${isCompleted && !r.hasReview && r.technicianId ? `
+            <a href="/review.html?requestId=${r.id}&techId=${r.technicianId}&techName=${encodeURIComponent(r.technicianName||'')}" 
+               class="btn btn-sm" style="background:var(--yellow-lt);color:var(--yellow);border:1px solid rgba(217,119,6,0.3)">
+              ⭐ Leave Review
+            </a>` : ''}
+
+          ${r.hasReview ? '<span style="font-size:.78rem;color:var(--green);font-weight:600">✓ Reviewed</span>' : ''}
+
+          ${isCompleted && !isPaid ? `
+            <a href="/payment.html?requestId=${r.id}&techId=${encodeURIComponent(r.technicianId||'')}&techName=${encodeURIComponent(r.technicianName||'')}&product=${encodeURIComponent(r.productCategory||'')}"
+               class="btn btn-primary btn-sm" style="background:var(--blue)">
+              💳 Pay Now
+            </a>` : ''}
+
+          ${isPaid ? '<span style="font-size:.78rem;color:var(--green);font-weight:600;padding:4px 0">💳 Payment done</span>' : ''}
+        </div>
+      </div>
+    `}).join('');
+  }
+
+  async function autoAssignNow(id, btn) {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Assigning...';
+    btn.disabled = true;
+    try {
+      const res = await POST('/api/requests/' + id + '/auto-assign', {}, Auth.userToken());
+      if (res.error) {
+        alert(res.error);
+      } else {
+        alert(res.message);
+        await loadDashboard();
+      }
+    } catch {
+      alert('Network error connecting to matching engine.');
+    }
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+
+  async function cancelRequest(id, btn) {
+    if (!confirm('Are you sure you want to cancel this service request?')) return;
+    btn.disabled = true;
+    try {
+      const res = await PUT('/api/requests/' + id + '/cancel', {}, Auth.userToken());
+      if (res.error) {
+        alert(res.error);
+      } else {
+        const el = document.getElementById('dashAlert');
+        showAlert(el, 'Request cancelled.', 'ok');
+        await loadDashboard();
+      }
+    } catch {
+      alert('Error cancelling request.');
+    }
+  }
+
+  async function rejectTechnician(id, techName) {
+    const reason = prompt(`Unassign ${techName || 'this technician'}? You can enter a reason (e.g. "Selected by mistake" or "Unavailable"):`, 'Selected by mistake');
+    if (reason === null) return;
+    try {
+      const res = await PUT('/api/requests/' + id + '/reject-technician', { reason }, Auth.userToken());
+      if (res.error) {
+        alert(res.error);
+      } else {
+        alert(res.message || 'Technician unassigned. Looking for a new partner...');
+        await loadDashboard();
+      }
+    } catch {
+      alert('Failed to change partner.');
+    }
+  }
+
+  async function confirmCompletion(id, expectedOtp, btn) {
+    let otp = expectedOtp;
+    if (expectedOtp) {
+      const entered = prompt(`Enter the 4-digit verification PIN provided by your technician (or click OK to confirm with ${expectedOtp}):`, expectedOtp);
+      if (entered === null) return;
+      otp = entered.trim();
+    } else {
+      if (!confirm('Are you sure you want to approve this work as completed? This will finalize the service.')) return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Approving...';
+    try {
+      const res = await PUT('/api/requests/' + id + '/confirm-completion', { otp }, Auth.userToken());
+      if (res.error) {
+        alert(res.error);
+        btn.disabled = false;
+        btn.textContent = '✅ Confirm & Approve Work';
+      } else {
+        alert(res.message);
+        await loadDashboard();
+      }
+    } catch {
+      alert('Network error approving completion.');
+      btn.disabled = false;
+    }
+  }
+
+  async function disputeCompletion(id, btn) {
+    const reason = prompt('Please explain why the work is not complete or what issue remains:', 'Work not fully completed');
+    if (!reason) return;
+    btn.disabled = true;
+    try {
+      const res = await PUT('/api/requests/' + id + '/dispute-completion', { reason }, Auth.userToken());
+      if (res.error) {
+        alert(res.error);
+      } else {
+        alert(res.message);
+        await loadDashboard();
+      }
+    } catch {
+      alert('Error recording dispute.');
+    }
+    btn.disabled = false;
+  }
+
+  loadDashboard();
+  // Auto-refresh every 20s for live match updates
+  setInterval(loadDashboard, 20000);
+</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "0cac98c5-0a8d-480b-b72b-d819f8bfc350",
+    "name": "Test User",
+    "email": "test@reciverse.com",
+    "phone": "9999999999",
+    "city": "Hyderabad",
+    "password": "$2a$10$ezqhLTj9hTLEJRZnVH0WuO42uiS3xH9Pq/RbXdayugLrAMZaLnfN6",
+    "createdAt": "2026-10-08T19:14:53.552Z"
+  },
+  {
+    "id": "80c8ed48-d0ce-4bf3-b8b5-02cde66d6500",
+    "name": "thanmay krishna kctk",
+    "email": "kcthanmay007@gmail.com",
+    "phone": "9963916962",
+    "city": "WARANGAL",
+    "password": "$2a$10$GR2ja/OT5Eb8uFsQs/jSEuC5yVsxTQm7e.F0It1E/t/pEVeJoO6Cq",
+    "createdAt": "2026-10-08T19:16:31.472Z"
+  },
+  {
+    "id": "2c78bb06-cca1-4267-99dc-cb96c8b72f9f",
+    "name": "kctk1",
+    "email": "1234@gmail.com",
+    "phone": "1234567890",
+    "city": "WARANGAL",
+    "password": "$2a$10$j9mdjKDOkbauZLuWbLlYFu4CqOBhMaBudmQF6bB9vOJVHeSihztoC",
+    "createdAt": "2026-10-09T09:32:12.232Z"
+  },
+  {
+    "id": "8a23cd55-2027-44e2-bdfc-6b0ec36df113",
+    "name": "Test User",
+    "email": "testflow@x.com",
+    "phone": "9000000001",
+    "city": "Hyderabad",
+    "password": "$2a$10$Y/AXucP72Po/fhPTle4wSuHQk8ECaVbE3Bcv5acj9Q8WHD0ib1SoK",
+    "about": "",
+    "avatar": "",
+    "totalRequests": 0,
+    "isBanned": false,
+    "createdAt": "2026-10-15T12:51:14.294Z"
+  },
+  {
+    "id": "d9beca06-6fa6-44ba-8e27-efd846eabd08",
+    "name": "thanmay krishna kctk",
+    "email": "thanmay@123",
+    "phone": "09963916962",
+    "city": "WARANGAL",
+    "password": "$2a$10$6/FI4eCph/pLhEf9BHh1/.xC9oDJnWyaudUw4VltVTkuDxBWYtQFm",
+    "about": "",
+    "avatar": "",
+    "totalRequests": 0,
+    "isBanned": false,
+    "createdAt": "2026-10-15T13:59:36.904Z"
+  },
+  {
+    "id": "73b41c78-389e-46e1-80b9-7a41c33a8310",
+    "name": "thanmay krishna kctk",
+    "email": "thanmay@gmail.com",
+    "phone": "09963916962",
+    "city": "WARANGAL",
+    "password": "$2a$10$OeFIi5G5xIP1v/XvTUuv6.onFLqEDUL0h1Y0WC1purtXjaqGp0Sk2",
+    "about": "",
+    "avatar": "",
+    "totalRequests": 0,
+    "isBanned": false,
+    "createdAt": "2026-10-16T08:29:11.513Z"
+  }
+]
