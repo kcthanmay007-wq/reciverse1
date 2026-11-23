@@ -31,7 +31,7 @@ Reciverse is an on-demand repair aggregator platform engineered to bridge the ga
 ### 2. Installation & Execution
 ```bash
 # Clone the repository
-git clone https://github.com/ThanmayKrishna/reciverse1.git
+git clone https://github.com/kcthanmay007-wq/reciverse1.git
 cd reciverse1/server
 
 # Install dependencies
@@ -55,7 +55,7 @@ Open your browser and navigate to **`http://localhost:3000`**.
 
 ---
 
-## 📄 Project Documentation
-- **Final Project Report (DOCX):** [Reciverse_Final_Project_Report.docx](./Reciverse_Final_Project_Report.docx)
+## 📄 Project Documentation & Demonstration
+- **Demonstration Video Link:** [Google Drive Demonstration Video](https://drive.google.com/drive/folders/10UPnXPyZy2x9ASsV3q_Tsh3dH8AfzxKV?usp=sharing)
+- **Final Project Report (DOCX):** [Reciverse_Project_Report_NITW.docx](./Reciverse_Project_Report_NITW.docx)
 - **Final Project Report (PDF):** [Reciverse_Final_Project_Report.pdf](./Reciverse_Final_Project_Report.pdf)
-- **Project Brief:** [Reciverse — Project Brief & Build Prompt.pdf](./Reciverse%20—%20Project%20Brief%20%26%20Build%20Prompt.pdf)
